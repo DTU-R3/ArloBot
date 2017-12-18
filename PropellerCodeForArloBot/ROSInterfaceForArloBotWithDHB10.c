@@ -205,6 +205,8 @@ ignoreFloorSensors = 0,
 ignoreIRSensors = 0,
 pluggedIn = 0;
 
+static volatile int minPowerValue = 10;
+
 void safetyOverride(void *par); // Use a cog to squelch incoming commands and perform safety procedures like halting, backing off, avoiding cliffs, calling for help, etc.
 // This can use proximity sensors to detect obstacles (including people) and cliffs
 // This can use the gyro to detect tipping
@@ -524,8 +526,8 @@ int main() {
             expectedLeftSpeed = newCommandedVelocity - angularVelocityOffset;
             expectedRightSpeed = newCommandedVelocity + angularVelocityOffset;
 
-            expectedLeftSpeed = expectedLeftSpeed / distancePerCount;
-            expectedRightSpeed = expectedRightSpeed / distancePerCount;
+            expectedLeftSpeed = expectedLeftSpeed / distancePerCount * 0.3;
+            expectedRightSpeed = expectedRightSpeed / distancePerCount * 0.3;
 
             newLeftSpeed = (int)expectedLeftSpeed;
             newRightSpeed = (int)expectedRightSpeed;
@@ -566,7 +568,7 @@ void broadcastOdometry(void *par) {
     char *reply = dhb10_reply;
 
     // Halt motors and reset counts to 0 in case they are moving somehow, even though we did halt them when the script started.
-    dhb10_com("GOSPD 0 0\r");
+    dhb10_com("GO 0 0\r");
     pause(dhb10OverloadPause);
     dhb10_com("RST\r");
     pause(dhb10OverloadPause);
@@ -611,7 +613,23 @@ void broadcastOdometry(void *par) {
         // Send resulting speed to wheels IF it is different from last time
         if (newLeftSpeed != oldLeftSpeed || newRightSpeed != oldRightSpeed) {
 //            dprint(term, "d\tGOSPD\t%d\t%d\t%d\t%d\n", oldLeftSpeed, newLeftSpeed, oldRightSpeed, newRightSpeed);  // For Debugging
-            sprint(s, "GOSPD %d %d\r", newLeftSpeed, newRightSpeed);
+            if ((newLeftSpeed > 0) && (newLeftSpeed < minPowerValue))
+            {
+                newLeftSpeed = minPowerValue;
+            }              
+            else if ((newLeftSpeed < 0) && (newLeftSpeed > -minPowerValue))
+            {
+                newLeftSpeed = -minPowerValue;
+            }      
+            if ((newRightSpeed > 0) && (newRightSpeed < minPowerValue))
+            {
+                newRightSpeed = minPowerValue;
+            }              
+            else if ((newRightSpeed < 0) && (newRightSpeed > -minPowerValue))
+            {
+                newRightSpeed = -minPowerValue;
+            }         
+            sprint(s, "GO %d %d\r", newLeftSpeed, newRightSpeed);
             dhb10_com(s);
             pause(dhb10OverloadPause);
         }
