@@ -111,6 +111,10 @@ I highly suggets you work through the instructions there and run the example pro
 #define RIGHT_A 1
 #define RIGHT_B 0
 
+#ifndef SPEEDTOPOWER 
+#define SPEEDTOPOWER 0.3
+#endif
+
 // See ~/.arlobot/per_robot_settings_for_propeller_c_code.h to adjust MAXIMUM_SPEED
 static int abd_speedLimit = MAXIMUM_SPEED;
 // Reverse speed limit to allow robot to reverse fast if it is blocked in front and visa versa
@@ -211,7 +215,9 @@ ignoreFloorSensors = 0,
 ignoreIRSensors = 0,
 pluggedIn = 0;
 
+#ifdef CONTROLBYPOWER
 static volatile int minPowerValue = 10;
+#endif
 
 void safetyOverride(void *par); // Use a cog to squelch incoming commands and perform safety procedures like halting, backing off, avoiding cliffs, calling for help, etc.
 // This can use proximity sensors to detect obstacles (including people) and cliffs
@@ -554,9 +560,14 @@ int main() {
 
             expectedLeftSpeed = newCommandedVelocity - angularVelocityOffset;
             expectedRightSpeed = newCommandedVelocity + angularVelocityOffset;
-
-            expectedLeftSpeed = expectedLeftSpeed / distancePerCount * 0.3;
-            expectedRightSpeed = expectedRightSpeed / distancePerCount * 0.3;
+            
+            #ifdef CONTROLBYPOWER
+            expectedLeftSpeed = expectedLeftSpeed / distancePerCount * SPEEDTOPOWER;
+            expectedRightSpeed = expectedRightSpeed / distancePerCount * SPEEDTOPOWER;
+            #else
+            expectedLeftSpeed = expectedLeftSpeed / distancePerCount;
+            expectedRightSpeed = expectedRightSpeed / distancePerCount;
+            #endif
 
             newLeftSpeed = (int)expectedLeftSpeed;
             newRightSpeed = (int)expectedRightSpeed;
@@ -644,6 +655,7 @@ void broadcastOdometry(void *par) {
         // Send resulting speed to wheels IF it is different from last time
         if (newLeftSpeed != oldLeftSpeed || newRightSpeed != oldRightSpeed) {
 //            dprint(term, "d\tGOSPD\t%d\t%d\t%d\t%d\n", oldLeftSpeed, newLeftSpeed, oldRightSpeed, newRightSpeed);  // For Debugging
+            #ifdef CONTROLBYPOWER
             if ((newLeftSpeed > 0) && (newLeftSpeed < minPowerValue))
             {
                 newLeftSpeed = minPowerValue;
@@ -661,6 +673,9 @@ void broadcastOdometry(void *par) {
                 newRightSpeed = -minPowerValue;
             }         
             sprint(s, "GO %d %d\r", newLeftSpeed, newRightSpeed);
+            #else
+            sprint(s, "GOSPD %d %d\r", newLeftSpeed, newRightSpeed);
+            #endif
             dhb10_com(s);
             pause(dhb10OverloadPause);
         }
