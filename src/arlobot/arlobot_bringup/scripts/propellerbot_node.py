@@ -53,8 +53,8 @@ class PropellerComm(object):
         self.r = rospy.Rate(1) # 1hz refresh rate
         self._Counter = 0  # For Propeller code's _HandleReceivedLine and _write_serial
         self._motorsOn = False  # Set to 1 if the motors are on, used with USB Relay Control board
-        self._safeToGo = False  # Use arlobot_safety to set this
-        self._SafeToOperate = False  # Use arlobot_safety to set this
+        self._safeToGo = True  # Use arlobot_safety to set this
+        self._SafeToOperate = True  # Use arlobot_safety to set this
         self._acPower = True # Track AC power status internally
         self._unPlugging = False # Used for when arlobot_safety tells us to "UnPlug"!
         self._wasUnplugging = False # Track previous unplugging status for motor control
@@ -145,10 +145,10 @@ class PropellerComm(object):
         """
         self._Counter += 1
         self._serialTimeout = 0
-        rospy.logdebug(str(self._Counter) + " " + line)
+        # rospy.logdebug(str(self._Counter) + " " + line)
         # if self._Counter % 50 == 0:
         self._SerialPublisher.publish(String(str(self._Counter) + ", in:  " + line))
-
+	print line
         if len(line) > 0:
             line_parts = line.split('\t')
             # We should broadcast the odometry no matter what. Even if the motors are off, or location is useful!
@@ -728,7 +728,7 @@ class PropellerComm(object):
     def _write_serial(self, message):
         self._SerialPublisher.publish(String(str(self._Counter) + ", out: " + message))
         self._SerialDataGateway.Write(message)
-
+	rospy.logdebug("Sending command message: " + message)
     def _toggleLED (self, LED):
         # Test with:
         # rosservice call /arlobot/ToggleLED 0 True
@@ -798,17 +798,24 @@ class PropellerComm(object):
         # NOTE: turtlebot_node has a lot of code under its cmd_vel function
         # to deal with maximum and minimum speeds,
         # which are dealt with in ArloBot on the Activity Board itself in the Propeller code.
-        if self._clear_to_go("forGeneralUse"):
+	v = twist_command.linear.x  # m/s
+        omega = twist_command.angular.z  # rad/s
+        rospy.logdebug("Handling twist command: " + str(v) + "," + str(omega))
+        message = 's,%.3f,%.3f\r' % (v, omega)
+        self._write_serial(message)
+	""" zhongyu++       
+	if self._clear_to_go("forGeneralUse"):
             v = twist_command.linear.x  # m/s
             omega = twist_command.angular.z  # rad/s
-            # rospy.logdebug("Handling twist command: " + str(v) + "," + str(omega))
+            rospy.logdebug("Handling twist command: " + str(v) + "," + str(omega))
             message = 's,%.3f,%.3f\r' % (v, omega)
             self._write_serial(message)
         elif self._clear_to_go("to_stop"):
             # WARNING! If you change this check the buffer length in the Propeller C code!
             message = 's,0.0,0.0\r'  # Tell it to be still if it is not safe to operate
-            # rospy.logdebug("Sending speed command message: " + message)
+            rospy.logdebug("Sending speed command message: " + message)
             self._write_serial(message)
+	--zhongyu	"""
 
     def _initialize_drive_geometry(self, line_parts):
         """ Send parameters from YAML file to Propeller board. """
@@ -1058,6 +1065,7 @@ class PropellerComm(object):
                 return_value = True
             else:
                 return_value = False
+	print return_value
         return return_value
 
 if __name__ == '__main__':
