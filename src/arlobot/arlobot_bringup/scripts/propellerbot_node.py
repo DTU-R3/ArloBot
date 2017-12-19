@@ -145,7 +145,7 @@ class PropellerComm(object):
         """
         self._Counter += 1
         self._serialTimeout = 0
-        # rospy.logdebug(str(self._Counter) + " " + line)
+        rospy.logdebug(str(self._Counter) + " " + line)
         # if self._Counter % 50 == 0:
         self._SerialPublisher.publish(String(str(self._Counter) + ", in:  " + line))
 
