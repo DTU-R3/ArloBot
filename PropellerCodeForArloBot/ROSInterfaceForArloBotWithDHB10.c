@@ -216,7 +216,7 @@ ignoreIRSensors = 0,
 pluggedIn = 0;
 
 #ifdef CONTROLBYPOWER
-static volatile int minPowerValue = 10;
+static volatile int minPowerValue = 20;
 #endif
 
 void safetyOverride(void *par); // Use a cog to squelch incoming commands and perform safety procedures like halting, backing off, avoiding cliffs, calling for help, etc.
