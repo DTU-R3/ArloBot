@@ -112,7 +112,7 @@ I highly suggets you work through the instructions there and run the example pro
 #define RIGHT_B 0
 
 #ifndef SPEEDTOPOWER 
-#define SPEEDTOPOWER 0.3
+#define SPEEDTOPOWER 0.5
 #endif
 
 // See ~/.arlobot/per_robot_settings_for_propeller_c_code.h to adjust MAXIMUM_SPEED
