@@ -964,6 +964,7 @@ void pollPingSensors(void *par) {
     int ir = 0, i;
     while (1)                                    // Repeat indefinitely
     {
+      if (ignoreProximity == 0) {
         for (i = 0; i < NUMBER_OF_PING_SENSORS; i++) {
             pingArray[i] = ping_cm(FIRST_PING_SENSOR_PIN + i);
             #ifdef hasMCP3208
@@ -973,6 +974,7 @@ void pollPingSensors(void *par) {
             }
             #endif
         }
+      }        
     }
 }
 
