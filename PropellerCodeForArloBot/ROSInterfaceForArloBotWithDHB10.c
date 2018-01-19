@@ -1185,6 +1185,34 @@ void pollGyro(void *par) {
                 }
             }
             #endif
+            
+            #ifdef FRONT_FAR_LEFT_SENSOR
+            if (pingArray[FRONT_FAR_LEFT_SENSOR] < startSlowDownDistance[FRONT_FAR_LEFT_SENSOR]) {
+                    if (pingArray[FRONT_FAR_LEFT_SENSOR] <= haltDistance[FRONT_FAR_LEFT_SENSOR] + 1) { // Halt just before.
+                        setEscapeSpeeds(MINIMUM_SPEED, 0); // Turn out to the right slowly
+                    }
+                    
+                    // For speed restriction:
+                    if (pingArray[FRONT_FAR_LEFT_SENSOR] < minDistance) {
+                        minRDistance = pingArray[FRONT_FAR_LEFT_SENSOR];
+                        minDistanceSensor = FRONT_FAR_LEFT_SENSOR;
+                    }
+            }
+            #endif
+            
+            #ifdef FRONT_FAR_RIGHT_SENSOR
+            if (pingArray[FRONT_FAR_RIGHT_SENSOR] < startSlowDownDistance[FRONT_FAR_RIGHT_SENSOR]) {
+                    if (pingArray[FRONT_FAR_RIGHT_SENSOR] <= haltDistance[FRONT_FAR_RIGHT_SENSOR] + 1) { // Halt just before.
+                        setEscapeSpeeds(0, MINIMUM_SPEED); // Turn out to the right slowly
+                    }
+                    
+                    // For speed restriction:
+                    if (pingArray[FRONT_FAR_RIGHT_SENSOR] < minDistance) {
+                        minRDistance = pingArray[FRONT_FAR_RIGHT_SENSOR];
+                        minDistanceSensor = FRONT_FAR_RIGHT_SENSOR;
+                    }
+            }
+            #endif
 
             #ifdef hasRearUpperDeckSensors
             for (i = FIRST_REAR_UPPER_SENSOR_NUMBER; i < FIRST_REAR_UPPER_SENSOR_NUMBER + HOW_MANY_REAR_UPPER_SENSORS; i++) { // Only use the rear sensors
