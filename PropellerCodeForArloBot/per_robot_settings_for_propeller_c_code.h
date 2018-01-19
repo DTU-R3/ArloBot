@@ -24,12 +24,12 @@ propeller board with SimpleIDE!!!
 // PROXIMITY SENSOR TUNING
 // Use these to tune the robots responses!
 // What is the maximum distance at which sensor readings should be noticed?
-#define MAX_DISTANCE 70
+#define MAX_DISTANCE 30
 // What is the maximum distance at which IR (Infrared) sensor readings should be noticed?
 // IR sensors tend to be less reliable, so make this shorter than the MAX_DISTANCE, which applies to PING sensors.
 #define IR_MAX_DISTANCE 50
 // What is the minimum speed that the speed limiter should set the robot to?
-#define MINIMUM_SPEED 20
+#define MINIMUM_SPEED 50
 // THROTTLE_STOP determines how quickly the speed limit is changed.
 // Make this number bigger to cause the speed to change more slowly.
 #define INCREASE_THROTTLE_RATE 50
@@ -74,7 +74,7 @@ propeller board with SimpleIDE!!!
 
 // QUESTION: Do you have PING sensors on the back of your robot?
 #define hasRearPingSensors
-#define FIRST_REAR_PING_SENSOR_NUMBER 0 // Count from 0
+#define FIRST_REAR_PING_SENSOR_NUMBER 3 // Count from 0
 #define HOW_MANY_REAR_PING_SENSORS 1
 
 // QUESTION: Do you have IR sensors on the front of your robot?
@@ -109,9 +109,9 @@ All of these will be assumed to face forward. */
    Remember the order is based on the order that they are plugged
    in to your board.
    WARNING: Be sure the array has the correct number of entries! */
-const int haltDistance[NUMBER_OF_PING_SENSORS] = {12};
+const int haltDistance[NUMBER_OF_PING_SENSORS] = {12, 12, 12, 12};
 //const int haltDistance[NUMBER_OF_PING_SENSORS] = {5, 10, 12, 10, 5, 5, 10, 12, 10, 5, 10, 12, 10, 12};
-const int startSlowDownDistance[NUMBER_OF_PING_SENSORS] = {MAX_DISTANCE};
+const int startSlowDownDistance[NUMBER_OF_PING_SENSORS] = {MAX_DISTANCE, MAX_DISTANCE, MAX_DISTANCE, MAX_DISTANCE};
 //const int startSlowDownDistance[NUMBER_OF_PING_SENSORS] = {8, 40, MAX_DISTANCE, 40, 8, 8, 40, MAX_DISTANCE, 40, 8, 40, MAX_DISTANCE, 40, MAX_DISTANCE};
 // Set shorter distances for IR sensors because they are less reliable.
 const int IRstartSlowDownDistance[NUMBER_OF_IR_SENSORS] = {8, 20, IR_MAX_DISTANCE, 20, 8, IR_MAX_DISTANCE, 0, 0};
@@ -125,12 +125,12 @@ does not apply to them. */
 // NOTE: IF you comment out the FRONT_CENTER_SENSOR, then ALL Front sensors are ignored for escaping!
 // "Left" refers to the ROBOT's left, assuming he faces the way he drives "forward"
 //#define FRONT_NEAR_LEFT_SENSOR 1
-#define FRONT_FAR_LEFT_SENSOR 2
+#define FRONT_FAR_LEFT_SENSOR 1
 //#define FRONT_NEAR_RIGHT_SENSOR 3
-#define FRONT_FAR_RIGHT_SENSOR 3
+#define FRONT_FAR_RIGHT_SENSOR 2
 //#define REAR_FAR_RIGHT_SENSOR 5
 //#define REAR_NEAR_RIGHT_SENSOR 6
-#define REAR_CENTER_SENSOR 1
+#define REAR_CENTER_SENSOR 3
 // NOTE: IF you comment out the REAR_CENTER_SENSOR, then ALL Rear sensors are ignored for escaping!
 //#define REAR_NEAR_LEFT_SENSOR 8
 //#define REAR_FAR_LEFT_SENSOR 9
