@@ -199,6 +199,8 @@ static double gyroHeading = 0.0;
 // For "Safety Override" Cog
 static volatile int safeToProceed = 0,
 safeToRecede = 0,
+leftBlocked = 0,
+rightBlocked = 0,
 cliff = 0,
 floorO = 0,
 Escaping = 0,
@@ -525,6 +527,16 @@ int main() {
             // Cliffs and cats are no joke!
             newLeftSpeed = 0;
             newRightSpeed = 0;
+            clearTwistRequest();
+        } else if (CommandedVelocity >= 0 && leftBlocked == 1) {
+            // Cliffs and cats are no joke!
+            newLeftSpeed = MINIMUM_SPEED;
+            newRightSpeed = -MINIMUM_SPEED;
+            clearTwistRequest();
+        } else if (CommandedVelocity >= 0 && rightBlocked == 1) {
+            // Cliffs and cats are no joke!
+            newLeftSpeed = -MINIMUM_SPEED;
+            newRightSpeed = MINIMUM_SPEED;
             clearTwistRequest();
         } else if ((CommandedVelocity > 0 && safeToProceed == 1) || (CommandedVelocity < 0 && safeToRecede == 1) || CommandedVelocity == 0) {
 
@@ -1187,31 +1199,23 @@ void pollGyro(void *par) {
             #endif
             
             #ifdef FRONT_FAR_LEFT_SENSOR
-            if (pingArray[FRONT_FAR_LEFT_SENSOR] < startSlowDownDistance[FRONT_FAR_LEFT_SENSOR]) {
-                    if (pingArray[FRONT_FAR_LEFT_SENSOR] <= haltDistance[FRONT_FAR_LEFT_SENSOR] + 1) { // Halt just before.
-                        setEscapeSpeeds(MINIMUM_SPEED, 0); // Turn out to the right slowly
-                    }
-                    
-                    // For speed restriction:
-                    if (pingArray[FRONT_FAR_LEFT_SENSOR] < minDistance) {
-                        minRDistance = pingArray[FRONT_FAR_LEFT_SENSOR];
-                        minDistanceSensor = FRONT_FAR_LEFT_SENSOR;
-                    }
+            if (pingArray[FRONT_FAR_LEFT_SENSOR] <= haltDistance[FRONT_FAR_LEFT_SENSOR] + 1) { // Halt just before.
+                leftBlocked = 1;
             }
+            else
+            {
+                leftBlocked = 0;
+            }                      
             #endif
             
             #ifdef FRONT_FAR_RIGHT_SENSOR
-            if (pingArray[FRONT_FAR_RIGHT_SENSOR] < startSlowDownDistance[FRONT_FAR_RIGHT_SENSOR]) {
-                    if (pingArray[FRONT_FAR_RIGHT_SENSOR] <= haltDistance[FRONT_FAR_RIGHT_SENSOR] + 1) { // Halt just before.
-                        setEscapeSpeeds(0, MINIMUM_SPEED); // Turn out to the right slowly
-                    }
-                    
-                    // For speed restriction:
-                    if (pingArray[FRONT_FAR_RIGHT_SENSOR] < minDistance) {
-                        minRDistance = pingArray[FRONT_FAR_RIGHT_SENSOR];
-                        minDistanceSensor = FRONT_FAR_RIGHT_SENSOR;
-                    }
+            if (pingArray[FRONT_FAR_RIGHT_SENSOR] <= haltDistance[FRONT_FAR_RIGHT_SENSOR] + 1) { // Halt just before.
+                rightBlocked = 1;
             }
+            else
+            {
+                rightBlocked = 0;
+            }  
             #endif
 
             #ifdef hasRearUpperDeckSensors
@@ -1464,6 +1468,8 @@ void pollGyro(void *par) {
             safeToRecede = 1;
             abd_speedLimit = MAXIMUM_SPEED;
             abdR_speedLimit = MAXIMUM_SPEED;
+            leftBlocked = 0;
+            rightBlocked = 0;
         }
         pause(1); // Just throttles this cog a little.
     }
