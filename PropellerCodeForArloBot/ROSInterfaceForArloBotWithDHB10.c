@@ -865,8 +865,8 @@ void encoderCount(void *par)
         int right_A = input(RIGHT_A);
         int right_B = input(RIGHT_B);
 
-        WheelCount(left_A, left_B, 1);
-        WheelCount(right_A, right_B, 2);
+        WheelCount(left_A, left_B, 0);
+        WheelCount(right_A, right_B, 1);
     }
 }
 
