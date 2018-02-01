@@ -226,8 +226,9 @@ void safetyOverride(void *par); // Use a cog to squelch incoming commands and pe
 static int safetyOverrideStack[128]; // If things get weird make this number bigger!
 
 // Add encoders to the propeller board and start a cog to count the ticks
-static volatile long int left_ticks = 0, right_ticks = 0;
-static volatile int last_left_A = 2; last_right_A = 2;
+static volatile long int encoder_ticks[2] = {0,0};
+static volatile int last_A[2] = {2,2};
+static volatile int last_B[2] = {2,2};
 void encoderCount(void *par);
 static int encoderCountStack[128]; // If things get weird make this number bigger!
 
@@ -611,8 +612,8 @@ void broadcastOdometry(void *par) {
     dhb10_com("GO 0 0\r");
     pause(dhb10OverloadPause);
     dhb10_com("RST\r");
-    left_ticks = 0;
-    right_ticks = 0;
+    encoder_ticks[0] = 0;
+    encoder_ticks[1] = 0;
     pause(dhb10OverloadPause);
 //    int acc = DHB10_ACC;
 //    int acc = DHB10_MAX_ACC;
@@ -712,8 +713,8 @@ void broadcastOdometry(void *par) {
            ticksRight = dhb10_ticksRight;
         } else {
            //Use encoder values from Propeller board
-           ticksLeft = left_ticks;
-           ticksRight = right_ticks;
+           ticksLeft = encoder_ticks[0];
+           ticksRight = encoder_ticks[1];
         }
         //dprint(term, "d\tDIST\t%d\t%d\n", ticksLeft, ticksRight);  // For Debugging
         pause(dhb10OverloadPause);
@@ -825,6 +826,69 @@ void broadcastOdometry(void *par) {
  * For when the encoders are connected to the Propeller board
  * instead of being connected to the motor board.
  */
+void WheelCount(int a, int b, int i)
+{
+    if (last_A[i] == 0)
+    {
+        if (a == 1)
+        {
+            if (b == 0)
+            {
+                encoder_ticks[i]++;
+            }
+            else
+            {
+                encoder_ticks[i]--;
+            }
+        }
+    }
+    else if (last_A[i] == 1)
+    {
+        if (a == 0)
+        {
+            if (b == 1)
+            {
+                encoder_ticks[i]++;
+            }
+            else
+            {
+                encoder_ticks[i]--;
+            }
+        }
+    }
+    
+    if (last_B[i] == 0)
+    {
+        if (b == 1)
+        {
+            if (a == 1)
+            {
+                encoder_ticks[i]++;
+            }
+            else
+            {
+                encoder_ticks[i]--;
+            }
+        }
+    }
+    else if (last_B[i] == 1)
+    {
+        if (b == 0)
+        {
+            if (a == 0)
+            {
+                encoder_ticks[i]++;
+            }
+            else
+            {
+                encoder_ticks[i]--;
+            }
+        }
+    }
+    
+    last_A[i] = a;
+    last_B[i] = b;
+}  
 void encoderCount(void *par)
 {
     while(1)
@@ -834,65 +898,8 @@ void encoderCount(void *par)
         int right_A = input(RIGHT_A);
         int right_B = input(RIGHT_B);
 
-        if (last_left_A == 0)
-        {
-            if (left_A == 1)
-            {
-                if (left_B == 0)
-                {
-                    left_ticks++;
-                }
-                else
-                {
-                    left_ticks--;
-                }
-            }
-        }
-        else if (last_left_A == 1)
-        {
-            if (left_A == 0)
-            {
-                if (left_B == 1)
-                {
-                    left_ticks++;
-                }
-                else
-                {
-                    left_ticks--;
-                }
-            }
-        }
-        last_left_A = left_A;
-
-        if (last_right_A == 0)
-        {
-            if (right_A == 1)
-            {
-                if (right_B == 0)
-                {
-                    right_ticks++;
-                }
-                else
-                {
-                    right_ticks--;
-                }
-            }
-        }
-        else if (last_right_A == 1)
-        {
-            if (right_A == 0)
-            {
-                if (right_B == 1)
-                {
-                    right_ticks++;
-                }
-                else
-                {
-                    right_ticks--;
-                }
-            }
-        }
-        last_right_A = right_A;
+        WheelCount(left_A, left_B, 0);
+        WheelCount(right_A, right_B, 1);
     }
 }
 
