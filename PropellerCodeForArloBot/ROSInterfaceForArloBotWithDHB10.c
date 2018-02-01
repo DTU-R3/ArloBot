@@ -528,12 +528,12 @@ int main() {
             newLeftSpeed = 0;
             newRightSpeed = 0;
             clearTwistRequest();
-        } else if (CommandedVelocity >= 0 && leftBlocked == 1) {
+        } else if (CommandedVelocity > 0 && leftBlocked == 1) {
             // Cliffs and cats are no joke!
             newLeftSpeed = MINIMUM_SPEED;
             newRightSpeed = -MINIMUM_SPEED;
             clearTwistRequest();
-        } else if (CommandedVelocity >= 0 && rightBlocked == 1) {
+        } else if (CommandedVelocity > 0 && rightBlocked == 1) {
             // Cliffs and cats are no joke!
             newLeftSpeed = -MINIMUM_SPEED;
             newRightSpeed = MINIMUM_SPEED;
