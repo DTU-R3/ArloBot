@@ -209,9 +209,7 @@ ignoreFloorSensors = 0,
 ignoreIRSensors = 0,
 pluggedIn = 0;
 
-#ifdef CONTROLBYPOWER
-static volatile int minPowerValue = 10;
-#endif
+static volatile int controlByPower = 1, minPowerValue = 10;
 
 void safetyOverride(void *par); // Use a cog to squelch incoming commands and perform safety procedures like halting, backing off, avoiding cliffs, calling for help, etc.
 // This can use proximity sensors to detect obstacles (including people) and cliffs
@@ -310,6 +308,10 @@ int main() {
                 }
                 if (token != NULL) {
                     Heading = strtod(token, &unconverted);
+                    token = strtok(NULL, delimiter);
+                }
+                if (token != NULL) {
+                    controlByPower = (int) (strtod(token, &unconverted));
                 }
                 gyroHeading = Heading;
                 if (trackWidth > 0.0 && distancePerCount > 0.0)
@@ -448,6 +450,10 @@ int main() {
                 }
                 if (token != NULL) {
                     pluggedIn = (int)(strtod(token, &unconverted));
+                    token = strtok(NULL, delimiter);
+                }
+                if (token != NULL) {
+                    controlByPower = (int)(strtod(token, &unconverted));
                 }
                 timeoutCounter = 0;
             } else if (buf[0] == 'l') {
@@ -532,13 +538,14 @@ int main() {
             expectedLeftSpeed = newCommandedVelocity - angularVelocityOffset;
             expectedRightSpeed = newCommandedVelocity + angularVelocityOffset;
             
-            #ifdef CONTROLBYPOWER
-            expectedLeftSpeed = expectedLeftSpeed / distancePerCount * SPEEDTOPOWER;
-            expectedRightSpeed = expectedRightSpeed / distancePerCount * SPEEDTOPOWER;
-            #else
-            expectedLeftSpeed = expectedLeftSpeed / distancePerCount;
-            expectedRightSpeed = expectedRightSpeed / distancePerCount;
-            #endif
+            if (controlByPower == 1) {              
+                expectedLeftSpeed = expectedLeftSpeed / distancePerCount * SPEEDTOPOWER;
+                expectedRightSpeed = expectedRightSpeed / distancePerCount * SPEEDTOPOWER;
+            }
+            else {
+                expectedLeftSpeed = expectedLeftSpeed / distancePerCount;
+                expectedRightSpeed = expectedRightSpeed / distancePerCount;
+            }            
 
             newLeftSpeed = (int)expectedLeftSpeed;
             newRightSpeed = (int)expectedRightSpeed;
@@ -624,27 +631,28 @@ void broadcastOdometry(void *par) {
         // Send resulting speed to wheels IF it is different from last time
         if (newLeftSpeed != oldLeftSpeed || newRightSpeed != oldRightSpeed) {
 //            dprint(term, "d\tGOSPD\t%d\t%d\t%d\t%d\n", oldLeftSpeed, newLeftSpeed, oldRightSpeed, newRightSpeed);  // For Debugging
-            #ifdef CONTROLBYPOWER
-            if ((newLeftSpeed > 0) && (newLeftSpeed < minPowerValue))
-            {
-                newLeftSpeed = minPowerValue;
+            if (controlByPower == 1) {  
+              if ((newLeftSpeed > 0) && (newLeftSpeed < minPowerValue))
+              {
+                  newLeftSpeed = minPowerValue;
+              }              
+              else if ((newLeftSpeed < 0) && (newLeftSpeed > -minPowerValue))
+              {
+                  newLeftSpeed = -minPowerValue;
+              }      
+              if ((newRightSpeed > 0) && (newRightSpeed < minPowerValue))
+              {
+                  newRightSpeed = minPowerValue;
+              }              
+              else if ((newRightSpeed < 0) && (newRightSpeed > -minPowerValue))
+              {
+                  newRightSpeed = -minPowerValue;
+              }         
+              sprint(s, "GO %d %d\r", newLeftSpeed, newRightSpeed);
             }              
-            else if ((newLeftSpeed < 0) && (newLeftSpeed > -minPowerValue))
-            {
-                newLeftSpeed = -minPowerValue;
-            }      
-            if ((newRightSpeed > 0) && (newRightSpeed < minPowerValue))
-            {
-                newRightSpeed = minPowerValue;
-            }              
-            else if ((newRightSpeed < 0) && (newRightSpeed > -minPowerValue))
-            {
-                newRightSpeed = -minPowerValue;
-            }         
-            sprint(s, "GO %d %d\r", newLeftSpeed, newRightSpeed);
-            #else
-            sprint(s, "GOSPD %d %d\r", newLeftSpeed, newRightSpeed);
-            #endif
+            else {
+              sprint(s, "GOSPD %d %d\r", newLeftSpeed, newRightSpeed);
+            }            
             dhb10_com(s);
             pause(dhb10OverloadPause);
         }
