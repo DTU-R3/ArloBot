@@ -217,7 +217,7 @@ ignoreFloorSensors = 0,
 ignoreIRSensors = 0,
 pluggedIn = 0;
 
-static volatile int controlByPower = 1, minPowerValue = 10;
+static volatile int controlByPower = 1, minPowerValue = 25;
 
 void safetyOverride(void *par); // Use a cog to squelch incoming commands and perform safety procedures like halting, backing off, avoiding cliffs, calling for help, etc.
 // This can use proximity sensors to detect obstacles (including people) and cliffs
