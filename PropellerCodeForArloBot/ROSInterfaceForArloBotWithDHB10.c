@@ -380,7 +380,7 @@ int main() {
     #endif
 
     // Start safetyOverride cog: (AFTER the Motors are initialized!)
-    cogstart(&safetyOverride, NULL, safetyOverrideStack, sizeof safetyOverrideStack);
+    // cogstart(&safetyOverride, NULL, safetyOverrideStack, sizeof safetyOverrideStack);
 
     // Start the Odometry broadcast cog
     cogstart(&broadcastOdometry, NULL, fstack, sizeof fstack);
@@ -527,44 +527,6 @@ int main() {
             timeoutCounter = ROStimeout; // Prevent runaway integer length
         }
 
-        if (Escaping == 1) {
-            newLeftSpeed = escapeLeftSpeed;
-            newRightSpeed = escapeRightSpeed;
-            clearTwistRequest();
-            wasEscaping = 1;
-        } else if (wasEscaping == 1) {
-            // Halt robot before continuing normally if we were escaping before now.
-            newLeftSpeed = 0;
-            newRightSpeed = 0;
-            clearTwistRequest();
-            wasEscaping = 0;
-        } else if (CommandedVelocity >= 0 && (cliff == 1 || floorO == 1)) {
-            // Cliffs and cats are no joke!
-            newLeftSpeed = 0;
-            newRightSpeed = 0;
-            clearTwistRequest();
-        } else if (CommandedVelocity > 0 && leftBlocked == 1) {
-            // Cliffs and cats are no joke!
-            newLeftSpeed = MINIMUM_SPEED;
-            newRightSpeed = -MINIMUM_SPEED;
-            clearTwistRequest();
-        } else if (CommandedVelocity > 0 && rightBlocked == 1) {
-            // Cliffs and cats are no joke!
-            newLeftSpeed = -MINIMUM_SPEED;
-            newRightSpeed = MINIMUM_SPEED;
-            clearTwistRequest();
-        } else if ((CommandedVelocity > 0 && safeToProceed == 1) || (CommandedVelocity < 0 && safeToRecede == 1) || CommandedVelocity == 0) {
-
-            /* Prevent saturation at max wheel speed when a compound command
-               is sent.
-               Without this, if your max speed is 50, and ROS asks us to set
-               one wheel at 50 and the other at 100, we will end up with both
-               at 50 changing a turn into a straight line!
-
-               Remember that max speed is variable based on parameters within
-               this code, such as proximity to walls, etc.
-               */
-
             // Use forward speed limit for rotate in place.
             if (CommandedVelocity > 0 && (abd_speedLimit * distancePerCount) - fabs(angularVelocityOffset) < CommandedVelocity) {
                     newCommandedVelocity = (abd_speedLimit * distancePerCount) - fabs(angularVelocityOffset);
@@ -576,6 +538,38 @@ int main() {
                 // Or if requested speed does not exceed maximum.
                 newCommandedVelocity = CommandedVelocity;
             }
+        
+        // Reactive control for demo    
+        if (ignoreProximity == 0) {
+            int pingThres = 20;  // threshold for ping sensors
+            if (CommandedVelocity < 0 && pingArray[1] < pingThres) {
+                newCommandedVelocity = 0;
+                angularVelocityOffset = 0;            
+            }              
+            else if (CommandedVelocity > 0 && pingArray[0] < pingThres) {
+                // If both left and right are blocked, robot stop
+                if (pingArray[2] < pingThres && pingArray[3] < pingThres) {
+                    newCommandedVelocity = 0;
+                    angularVelocityOffset = 0;
+                }                  
+                else if ( pingArray[2] > pingArray[3]) {
+                    newCommandedVelocity = 0;
+                    angularVelocityOffset = 0.5 * (trackWidth * 0.5);
+                }   
+                else if ( pingArray[2] < pingArray[3]) {
+                    newCommandedVelocity = 0;
+                    angularVelocityOffset = 0.5 * (trackWidth * 0.5);
+                }                                
+            }
+            else if (CommandedVelocity > 0 && pingArray[2] < pingThres) {
+                newCommandedVelocity = 0.3;
+                angularVelocityOffset = -0.5 * (trackWidth * 0.5);
+            }   
+            else if (CommandedVelocity > 0 && pingArray[3] < pingThres) {
+                newCommandedVelocity = 0.3;
+                angularVelocityOffset = 0.5 * (trackWidth * 0.5);
+            }      
+        }                             
 
             expectedLeftSpeed = newCommandedVelocity - angularVelocityOffset;
             expectedRightSpeed = newCommandedVelocity + angularVelocityOffset;
@@ -591,13 +585,6 @@ int main() {
 
             newLeftSpeed = (int)expectedLeftSpeed;
             newRightSpeed = (int)expectedRightSpeed;
-
-        } else {
-            // Not safe to proceed in the requested direction, but also not escaping, so just be still
-            // until somebody tells us to "back out" of the situation.
-            newLeftSpeed = 0;
-            newRightSpeed = 0;
-            clearTwistRequest();
         }
 
         // DHB10 controller only works in even numbers, so let's make life easy on it and ourselves if we are doing any comparisons.
@@ -610,8 +597,6 @@ int main() {
 
             broadcastSpeedLeft = newLeftSpeed;
             broadcastSpeedRight = newRightSpeed;
-
-    }
     }
 }
 
