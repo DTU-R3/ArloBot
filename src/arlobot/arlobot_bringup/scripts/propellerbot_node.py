@@ -534,16 +534,16 @@ class PropellerComm(object):
         # but costmap isn't watching it at the moment. I think it is too erratic for that.
 
         try:
-            sensor_data = json.loads(line_parts[7])
+            sensor_data = json.loads(line_parts[9])
         except:
             return
-        self._ping_publisher.publish(line_parts[7])
+        self._ping_publisher.publish(line_parts[9])
         ping = [artificial_far_distance] * 10
         ir = [artificial_far_distance] * len(ping)
 
         # Convert cm to meters and add offset
         for i in range(0, len(ping)):
-            # ping[0] = (int(line_parts[7]) / 100.0) + sensor_offset
+            # ping[0] = (int(line_parts[9]) / 100.0) + sensor_offset
             ping[i] = (sensor_data.get('p' + str(i), artificial_far_distance * 100) / 100.0) + sensor_offset
             # Set to "out of range" for distances over "max_range_accepted" to clear long range obstacles
             # and use this for near range only.
