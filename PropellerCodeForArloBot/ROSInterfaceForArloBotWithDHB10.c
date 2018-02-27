@@ -218,6 +218,7 @@ ignoreIRSensors = 0,
 pluggedIn = 0;
 
 static volatile int controlByPower = 1, minPowerValue = 25;
+const double coff = 1.075; // ratio of right wheel / left wheel
 
 void safetyOverride(void *par); // Use a cog to squelch incoming commands and perform safety procedures like halting, backing off, avoiding cliffs, calling for help, etc.
 // This can use proximity sensors to detect obstacles (including people) and cliffs
@@ -561,12 +562,12 @@ int main() {
                     angularVelocityOffset = 0.5 * (trackWidth * 0.5);
                 }                                
             }
-            else if (CommandedVelocity > 0 && pingArray[2] < pingThres) {
-                newCommandedVelocity = 0.3;
+            else if (CommandedVelocity > 0 && pingArray[2] < ping_stop_thres) {
+                newCommandedVelocity = 0;
                 angularVelocityOffset = -0.5 * (trackWidth * 0.5);
             }   
-            else if (CommandedVelocity > 0 && pingArray[3] < pingThres) {
-                newCommandedVelocity = 0.3;
+            else if (CommandedVelocity > 0 && pingArray[3] < ping_stop_thres) {
+                newCommandedVelocity = 0;
                 angularVelocityOffset = 0.5 * (trackWidth * 0.5);
             }      
         }                             
@@ -576,7 +577,7 @@ int main() {
             
             if (controlByPower == 1) {              
                 expectedLeftSpeed = expectedLeftSpeed / distancePerCount * SPEEDTOPOWER;
-                expectedRightSpeed = expectedRightSpeed / distancePerCount * SPEEDTOPOWER;
+                expectedRightSpeed = expectedRightSpeed / distancePerCount * SPEEDTOPOWER * coff;
             }
             else {
                 expectedLeftSpeed = expectedLeftSpeed / distancePerCount;
