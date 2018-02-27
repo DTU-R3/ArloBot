@@ -542,14 +542,20 @@ int main() {
         
         // Reactive control for demo    
         if (ignoreProximity == 0) {
-            int pingThres = 20;  // threshold for ping sensors
-            if (CommandedVelocity < 0 && pingArray[1] < pingThres) {
-                newCommandedVelocity = 0;
-                angularVelocityOffset = 0;            
+            int ping_slow_thres = 80;
+            int ping_stop_thres = 20;  // threshold for ping sensors
+            if (CommandedVelocity < 0 && pingArray[1] < ping_slow_thres) {
+                if (pingArray[1] > ping_stop_thres) {
+                    newCommandedVelocity = (pingArray[1]-ping_stop_thres)*CommandedVelocity/(ping_slow_thres-ping_stop_thres)/2;
+                }
+                else {
+                    newCommandedVelocity = 0;
+                    angularVelocityOffset = 0; 
+                }                                                        
             }              
-            else if (CommandedVelocity > 0 && pingArray[0] < pingThres) {
+            else if (CommandedVelocity > 0 && pingArray[0] < ping_stop_thres) {
                 // If both left and right are blocked, robot stop
-                if (pingArray[2] < pingThres && pingArray[3] < pingThres) {
+                if (pingArray[2] < ping_stop_thres && pingArray[3] < ping_stop_thres) {
                     newCommandedVelocity = 0;
                     angularVelocityOffset = 0;
                 }                  
@@ -559,7 +565,7 @@ int main() {
                 }   
                 else if ( pingArray[2] < pingArray[3]) {
                     newCommandedVelocity = 0;
-                    angularVelocityOffset = 0.5 * (trackWidth * 0.5);
+                    angularVelocityOffset = -0.5 * (trackWidth * 0.5);
                 }                                
             }
             else if (CommandedVelocity > 0 && pingArray[2] < ping_stop_thres) {
@@ -570,7 +576,10 @@ int main() {
                 newCommandedVelocity = 0;
                 angularVelocityOffset = 0.5 * (trackWidth * 0.5);
             }      
-        }                             
+            else if (CommandedVelocity > 0 && pingArray[0] < ping_slow_thres) {
+                newCommandedVelocity = (pingArray[0]-ping_stop_thres)*CommandedVelocity/(ping_slow_thres-ping_stop_thres)/2;
+            }              
+         }                             
 
             expectedLeftSpeed = newCommandedVelocity - angularVelocityOffset;
             expectedRightSpeed = newCommandedVelocity + angularVelocityOffset;
