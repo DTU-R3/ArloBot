@@ -294,7 +294,7 @@ class PropellerComm(object):
         parts_count = len(line_parts)
 
         # rospy.logwarn(partsCount)
-        if parts_count != 8:  # Just discard short/long lines, increment this as lines get longer
+        if parts_count < 8:  # Just discard short lines, increment this as lines get longer
             rospy.logwarn("Short line from Propeller board: " + str(parts_count))
             return
 
