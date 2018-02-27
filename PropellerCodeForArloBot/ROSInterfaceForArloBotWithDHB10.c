@@ -779,7 +779,7 @@ void broadcastOdometry(void *par) {
            to deal with mirrors and targets below the Kinect/Xtion, but I'm not sure how practical that is.
            */
         #ifdef enableOutput
-           dprint(term, "o\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t", X, Y, Heading, gyroHeading, V, Omega);
+           dprint(term, "o\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%d\t%d\t", X, Y, Heading, gyroHeading, V, Omega,ticksLeft,ticksRight);
         // Send the PING/IR sensor data as a JSON packet:
            dprint(term, "{");
         for (i = 0; i < NUMBER_OF_PING_SENSORS; i++) { // Loop through all of the sensors
