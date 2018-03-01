@@ -78,6 +78,7 @@ class PropellerComm(object):
         self.ignore_ir_sensors = rospy.get_param("~ignoreIRSensors", False)
         self.ignore_floor_sensors = rospy.get_param("~ignoreFloorSensors", False)
         self.control_by_power = rospy.get_param("~controlByPower", True)
+        self.acceleration = rospy.get_param("~acceleration", 0.2)
         self.robotParamChanged = False
 
         # Get motor relay numbers for use later in _HandleUSBRelayStatus if USB Relay is in use:
@@ -846,7 +847,7 @@ class PropellerComm(object):
             else:
                 control_by_power = 0
             # WARNING! If you change this check the buffer length in the Propeller C code!
-            message = 'd,%f,%f,%d,%d,%d,%d,%d,%f,%f,%f,%d\r' % (self.track_width, self.distance_per_count, ignore_proximity, ignore_cliff_sensors, ignore_ir_sensors, ignore_floor_sensors, ac_power, self.lastX, self.lastY, self.lastHeading, control_by_power)
+            message = 'd,%f,%f,%d,%d,%d,%d,%d,%f,%f,%f,%d,%f\r' % (self.track_width, self.distance_per_count, ignore_proximity, ignore_cliff_sensors, ignore_ir_sensors, ignore_floor_sensors, ac_power, self.lastX, self.lastY, self.lastHeading, control_by_power, self.acceleration)
             rospy.logdebug("Sending drive geometry params message: " + message)
             self._write_serial(message)
         else:
@@ -1003,7 +1004,7 @@ class PropellerComm(object):
                 else:
                     control_by_power = 0
                 # WARNING! If you change this check the buffer length in the Propeller C code!
-                message = 'd,%f,%f,%d,%d,%d,%d,%d, %d\r' % (self.track_width, self.distance_per_count, ignore_proximity, ignore_cliff_sensors, ignore_ir_sensors, ignore_floor_sensors, ac_power, control_by_power)
+                message = 'd,%f,%f,%d,%d,%d,%d,%d, %d, %f\r' % (self.track_width, self.distance_per_count, ignore_proximity, ignore_cliff_sensors, ignore_ir_sensors, ignore_floor_sensors, ac_power, control_by_power, self.acceleration)
                 self._write_serial(message)
                 self.robotParamChanged = False
 

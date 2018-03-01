@@ -218,6 +218,7 @@ ignoreIRSensors = 0,
 pluggedIn = 0;
 
 static volatile int controlByPower = 1, minPowerValue = 25;
+static volatile double acc = 1.0; // meter per second square
 const double coff = 1.075; // ratio of right wheel / left wheel
 
 void safetyOverride(void *par); // Use a cog to squelch incoming commands and perform safety procedures like halting, backing off, avoiding cliffs, calling for help, etc.
@@ -232,6 +233,7 @@ static volatile int last_A[2] = {2,2};
 static volatile int last_B[2] = {2,2};
 void encoderCount(void *par);
 static int encoderCountStack[128]; // If things get weird make this number bigger!
+double Accelerate(double cmd_vel, double robot_vel, double acc, int timestep);
 
 int main() {
 
@@ -265,7 +267,7 @@ int main() {
     // This may or may not improve performance
     // Some of these we want to hold and use later too
     // A Buffer long enough to hold the longest line ROS may send.
-    const int bufferLength = 35; // A Buffer long enough to hold the longest line ROS may send.
+    const int bufferLength = 100; // A Buffer long enough to hold the longest line ROS may send.
     char buf[bufferLength];
 
     while (robotInitialized == 0) {
@@ -328,6 +330,10 @@ int main() {
                 }
                 if (token != NULL) {
                     controlByPower = (int) (strtod(token, &unconverted));
+                    token = strtok(NULL, delimiter);
+                }
+                if (token != NULL) {
+                    acc = strtod(token, &unconverted);
                 }
                 gyroHeading = Heading;
                 if (trackWidth > 0.0 && distancePerCount > 0.0)
@@ -394,6 +400,7 @@ int main() {
     double newCommandedVelocity;
     double CommandedAngularVelocity;
     double angularVelocityOffset = 0.0, expectedLeftSpeed, expectedRightSpeed;
+    double robotLeftSpeed = 0.0, robotRightSpeed = 0.0;
     int newLeftSpeed = 0, newRightSpeed = 0;
 
     void clearTwistRequest() {
@@ -473,6 +480,10 @@ int main() {
                 }
                 if (token != NULL) {
                     controlByPower = (int)(strtod(token, &unconverted));
+                    token = strtok(NULL, delimiter);
+                }
+                if (token != NULL) {
+                    acc = strtod(token, &unconverted);
                 }
                 timeoutCounter = 0;
             } else if (buf[0] == 'l') {
@@ -581,9 +592,13 @@ int main() {
             }              
          }                             
 
-            expectedLeftSpeed = newCommandedVelocity - angularVelocityOffset;
-            expectedRightSpeed = newCommandedVelocity + angularVelocityOffset;
-            
+         expectedLeftSpeed = newCommandedVelocity - angularVelocityOffset;
+         expectedRightSpeed = newCommandedVelocity + angularVelocityOffset;          
+         expectedLeftSpeed = Accelerate(expectedLeftSpeed, robotLeftSpeed, acc, 100);         
+         expectedRightSpeed = Accelerate(expectedRightSpeed, robotRightSpeed, acc, 100);     
+         robotLeftSpeed = expectedLeftSpeed;
+         robotRightSpeed = expectedRightSpeed;
+  
             if (controlByPower == 1) {              
                 expectedLeftSpeed = expectedLeftSpeed / distancePerCount * SPEEDTOPOWER;
                 expectedRightSpeed = expectedRightSpeed / distancePerCount * SPEEDTOPOWER * coff;
@@ -609,6 +624,20 @@ int main() {
             broadcastSpeedRight = newRightSpeed;
     }
 }
+
+double Accelerate(double cmd_vel, double robot_vel, double acc, int timestep) {
+    double vel;
+    if (cmd_vel - robot_vel > acc/timestep) {
+        vel = robot_vel + acc/timestep;
+    }
+    else if (robot_vel - cmd_vel > acc/timestep) {
+        vel = robot_vel - acc/timestep;
+    }
+    else {
+        vel = cmd_vel;
+    }       
+    return vel;
+}  
 
 void broadcastOdometry(void *par) {
 
