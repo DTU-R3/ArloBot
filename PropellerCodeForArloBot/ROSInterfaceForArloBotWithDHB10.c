@@ -218,8 +218,6 @@ ignoreIRSensors = 0,
 pluggedIn = 0;
 
 static volatile int controlByPower = 1, minPowerValue = 25;
-static volatile double acc = 1.0; // meter per second square
-const double coff = 1.075; // ratio of right wheel / left wheel
 
 void safetyOverride(void *par); // Use a cog to squelch incoming commands and perform safety procedures like halting, backing off, avoiding cliffs, calling for help, etc.
 // This can use proximity sensors to detect obstacles (including people) and cliffs
@@ -233,7 +231,10 @@ static volatile int last_A[2] = {2,2};
 static volatile int last_B[2] = {2,2};
 void encoderCount(void *par);
 static int encoderCountStack[128]; // If things get weird make this number bigger!
+
 double Accelerate(double cmd_vel, double robot_vel, double acc, int timestep);
+static volatile double acc = 1.0; // meter per second square
+static volatile double Ed = 1.075; // ratio of right wheel / left wheel
 
 int main() {
 
@@ -334,6 +335,10 @@ int main() {
                 }
                 if (token != NULL) {
                     acc = strtod(token, &unconverted);
+                    token = strtok(NULL, delimiter);
+                }
+                if (token != NULL) {
+                    Ed = strtod(token, &unconverted);
                 }
                 gyroHeading = Heading;
                 if (trackWidth > 0.0 && distancePerCount > 0.0)
@@ -484,6 +489,10 @@ int main() {
                 }
                 if (token != NULL) {
                     acc = strtod(token, &unconverted);
+                    token = strtok(NULL, delimiter);
+                }
+                if (token != NULL) {
+                    Ed = strtod(token, &unconverted);
                 }
                 timeoutCounter = 0;
             } else if (buf[0] == 'l') {
@@ -600,8 +609,8 @@ int main() {
          robotRightSpeed = expectedRightSpeed;
   
             if (controlByPower == 1) {              
-                expectedLeftSpeed = expectedLeftSpeed / distancePerCount * SPEEDTOPOWER;
-                expectedRightSpeed = expectedRightSpeed / distancePerCount * SPEEDTOPOWER * coff;
+                expectedLeftSpeed = expectedLeftSpeed / distancePerCount;
+                expectedRightSpeed = expectedRightSpeed / distancePerCount * Ed;
             }
             else {
                 expectedLeftSpeed = expectedLeftSpeed / distancePerCount;
