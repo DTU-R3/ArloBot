@@ -235,7 +235,7 @@ static int encoderCountStack[128]; // If things get weird make this number bigge
 double Accelerate(double cmd_vel, double robot_vel, double acc, int timestep);
 static volatile double acc = 1.0; // meter per second square
 static volatile double Ed = 1.075; // ratio of right wheel / left wheel
-static volatile double Kp = 0.3, Kd = 0.8;
+static volatile double Kp = 1, Ki =0.65, Kd = 0.3;
 
 int main() {
 
