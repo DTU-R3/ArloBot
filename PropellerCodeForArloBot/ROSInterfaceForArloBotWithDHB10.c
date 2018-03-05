@@ -108,8 +108,8 @@ I highly suggets you work through the instructions there and run the example pro
 // Define the encoders pins
 #define LEFT_A 3
 #define LEFT_B 2
-#define RIGHT_A 1
-#define RIGHT_B 0
+#define RIGHT_A 5
+#define RIGHT_B 4
 
 #ifndef SPEEDTOPOWER 
 #define SPEEDTOPOWER 0.5
@@ -232,6 +232,13 @@ static volatile int last_B[2] = {2,2};
 void encoderCount(void *par);
 static int encoderCountStack[128]; // If things get weird make this number bigger!
 
+double Accelerate(double cmd_vel, double robot_vel, double acc, int timestep);
+static volatile double acc = 1.0; // meter per second square
+static volatile double Ed = 1.075; // ratio of right wheel / left wheel
+static volatile double Kp = 0.3, Ki =0.65, Kd = 0.8;
+static volatile double currentLeftSpeed = 0.0, currentRightSpeed = 0.0;
+const int timestep = 100; // timestep as every 10 ms
+
 int main() {
 
     int wasEscaping = 0;
@@ -264,7 +271,7 @@ int main() {
     // This may or may not improve performance
     // Some of these we want to hold and use later too
     // A Buffer long enough to hold the longest line ROS may send.
-    const int bufferLength = 35; // A Buffer long enough to hold the longest line ROS may send.
+    const int bufferLength = 100; // A Buffer long enough to hold the longest line ROS may send.
     char buf[bufferLength];
 
     while (robotInitialized == 0) {
@@ -327,6 +334,14 @@ int main() {
                 }
                 if (token != NULL) {
                     controlByPower = (int) (strtod(token, &unconverted));
+                    token = strtok(NULL, delimiter);
+                }
+                if (token != NULL) {
+                    acc = strtod(token, &unconverted);
+                    token = strtok(NULL, delimiter);
+                }
+                if (token != NULL) {
+                    Ed = strtod(token, &unconverted);
                 }
                 gyroHeading = Heading;
                 if (trackWidth > 0.0 && distancePerCount > 0.0)
@@ -393,6 +408,7 @@ int main() {
     double newCommandedVelocity;
     double CommandedAngularVelocity;
     double angularVelocityOffset = 0.0, expectedLeftSpeed, expectedRightSpeed;
+    double robotLeftSpeed = 0.0, robotRightSpeed = 0.0;
     int newLeftSpeed = 0, newRightSpeed = 0;
 
     void clearTwistRequest() {
@@ -472,6 +488,14 @@ int main() {
                 }
                 if (token != NULL) {
                     controlByPower = (int)(strtod(token, &unconverted));
+                    token = strtok(NULL, delimiter);
+                }
+                if (token != NULL) {
+                    acc = strtod(token, &unconverted);
+                    token = strtok(NULL, delimiter);
+                }
+                if (token != NULL) {
+                    Ed = strtod(token, &unconverted);
                 }
                 timeoutCounter = 0;
             } else if (buf[0] == 'l') {
@@ -541,14 +565,20 @@ int main() {
         
         // Reactive control for demo    
         if (ignoreProximity == 0) {
-            int pingThres = 20;  // threshold for ping sensors
-            if (CommandedVelocity < 0 && pingArray[1] < pingThres) {
-                newCommandedVelocity = 0;
-                angularVelocityOffset = 0;            
+            int ping_slow_thres = 80;
+            int ping_stop_thres = 20;  // threshold for ping sensors
+            if (CommandedVelocity < 0 && pingArray[1] < ping_slow_thres) {
+                if (pingArray[1] > ping_stop_thres) {
+                    newCommandedVelocity = (pingArray[1]-ping_stop_thres)*CommandedVelocity/(ping_slow_thres-ping_stop_thres)/2;
+                }
+                else {
+                    newCommandedVelocity = 0;
+                    angularVelocityOffset = 0; 
+                }                                                        
             }              
-            else if (CommandedVelocity > 0 && pingArray[0] < pingThres) {
+            else if (CommandedVelocity > 0 && pingArray[0] < ping_stop_thres) {
                 // If both left and right are blocked, robot stop
-                if (pingArray[2] < pingThres && pingArray[3] < pingThres) {
+                if (pingArray[2] < ping_stop_thres && pingArray[3] < ping_stop_thres) {
                     newCommandedVelocity = 0;
                     angularVelocityOffset = 0;
                 }                  
@@ -558,25 +588,37 @@ int main() {
                 }   
                 else if ( pingArray[2] < pingArray[3]) {
                     newCommandedVelocity = 0;
-                    angularVelocityOffset = 0.5 * (trackWidth * 0.5);
+                    angularVelocityOffset = -0.5 * (trackWidth * 0.5);
                 }                                
             }
-            else if (CommandedVelocity > 0 && pingArray[2] < pingThres) {
-                newCommandedVelocity = 0.3;
+            else if (CommandedVelocity > 0 && pingArray[2] < ping_stop_thres) {
+                newCommandedVelocity = 0;
                 angularVelocityOffset = -0.5 * (trackWidth * 0.5);
             }   
-            else if (CommandedVelocity > 0 && pingArray[3] < pingThres) {
-                newCommandedVelocity = 0.3;
+            else if (CommandedVelocity > 0 && pingArray[3] < ping_stop_thres) {
+                newCommandedVelocity = 0;
                 angularVelocityOffset = 0.5 * (trackWidth * 0.5);
             }      
-        }                             
+            else if (CommandedVelocity > 0 && pingArray[0] < ping_slow_thres) {
+                newCommandedVelocity = (pingArray[0]-ping_stop_thres)*CommandedVelocity/(ping_slow_thres-ping_stop_thres)/2;
+            }              
+         }                             
 
-            expectedLeftSpeed = newCommandedVelocity - angularVelocityOffset;
-            expectedRightSpeed = newCommandedVelocity + angularVelocityOffset;
-            
+         expectedLeftSpeed = newCommandedVelocity - angularVelocityOffset;
+         expectedRightSpeed = newCommandedVelocity + angularVelocityOffset;          
+         expectedLeftSpeed = Accelerate(expectedLeftSpeed, robotLeftSpeed, acc, timestep);         
+         expectedRightSpeed = Accelerate(expectedRightSpeed, robotRightSpeed, acc, timestep);
+         
+         // Feedback control, PID
+         expectedLeftSpeed = expectedLeftSpeed + Kp * (expectedLeftSpeed - currentLeftSpeed) + Kd * (expectedLeftSpeed - currentLeftSpeed) / timestep;
+         expectedRightSpeed = expectedRightSpeed + Kp * (expectedRightSpeed - currentRightSpeed) + Kd * (expectedLeftSpeed - currentLeftSpeed) / timestep;
+              
+         robotLeftSpeed = expectedLeftSpeed;
+         robotRightSpeed = expectedRightSpeed;
+  
             if (controlByPower == 1) {              
-                expectedLeftSpeed = expectedLeftSpeed / distancePerCount * SPEEDTOPOWER;
-                expectedRightSpeed = expectedRightSpeed / distancePerCount * SPEEDTOPOWER;
+                expectedLeftSpeed = expectedLeftSpeed / distancePerCount;
+                expectedRightSpeed = expectedRightSpeed / distancePerCount * Ed;
             }
             else {
                 expectedLeftSpeed = expectedLeftSpeed / distancePerCount;
@@ -599,6 +641,20 @@ int main() {
             broadcastSpeedRight = newRightSpeed;
     }
 }
+
+double Accelerate(double cmd_vel, double robot_vel, double acc, int timestep) {
+    double vel;
+    if (cmd_vel - robot_vel > acc/timestep) {
+        vel = robot_vel + acc/timestep;
+    }
+    else if (robot_vel - cmd_vel > acc/timestep) {
+        vel = robot_vel - acc/timestep;
+    }
+    else {
+        vel = cmd_vel;
+    }       
+    return vel;
+}  
 
 void broadcastOdometry(void *par) {
 
@@ -747,6 +803,9 @@ void broadcastOdometry(void *par) {
         deltaDistance = 0.5f * (double) (deltaTicksLeft + deltaTicksRight) * distancePerCount;
         deltaX = deltaDistance * cos(Heading);
         deltaY = deltaDistance * sin(Heading);
+
+        currentLeftSpeed = deltaTicksLeft * distancePerCount * timestep;
+        currentRightSpeed = deltaTicksRight * distancePerCount * timestep;
 
         deltaTheta = (deltaTicksRight - deltaTicksLeft) * distancePerCount / trackWidth; 
         Heading += deltaTheta; 
