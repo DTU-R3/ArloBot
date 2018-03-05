@@ -235,7 +235,7 @@ static int encoderCountStack[128]; // If things get weird make this number bigge
 double Accelerate(double cmd_vel, double robot_vel, double acc, int timestep);
 static volatile double acc = 1.0; // meter per second square
 static volatile double Ed = 1.075; // ratio of right wheel / left wheel
-static volatile double Kp = 0.3, Ki =0.65, Kd = 0.8;
+static volatile double Kp = 0.1, Ki =0.65, Kd = 0.8;
 static volatile double currentLeftSpeed = 0.0, currentRightSpeed = 0.0;
 const int timestep = 100; // timestep as every 10 ms
 
@@ -543,14 +543,6 @@ int main() {
             }
         }
 
-        if (timeoutCounter > ROStimeout) {
-            clearTwistRequest();
-            #ifdef debugModeOn
-            dprint(term, "DEBUG: Stopping Robot due to serial timeout.\n");
-            #endif
-            timeoutCounter = ROStimeout; // Prevent runaway integer length
-        }
-
             // Use forward speed limit for rotate in place.
             if (CommandedVelocity > 0 && (abd_speedLimit * distancePerCount) - fabs(angularVelocityOffset) < CommandedVelocity) {
                     newCommandedVelocity = (abd_speedLimit * distancePerCount) - fabs(angularVelocityOffset);
@@ -602,21 +594,27 @@ int main() {
             else if (CommandedVelocity > 0 && pingArray[0] < ping_slow_thres) {
                 newCommandedVelocity = (pingArray[0]-ping_stop_thres)*CommandedVelocity/(ping_slow_thres-ping_stop_thres)/2;
             }              
-         }                             
+        }                             
 
+        if (timeoutCounter > ROStimeout) {
+            clearTwistRequest();
+            #ifdef debugModeOn
+            dprint(term, "DEBUG: Stopping Robot due to serial timeout.\n");
+            #endif
+            timeoutCounter = ROStimeout; // Prevent runaway integer length
+        }
+        
          expectedLeftSpeed = newCommandedVelocity - angularVelocityOffset;
          expectedRightSpeed = newCommandedVelocity + angularVelocityOffset;          
-         expectedLeftSpeed = Accelerate(expectedLeftSpeed, robotLeftSpeed, acc, timestep);         
-         expectedRightSpeed = Accelerate(expectedRightSpeed, robotRightSpeed, acc, timestep);
-         
-         // Feedback control, PID
-         expectedLeftSpeed = expectedLeftSpeed + Kp * (expectedLeftSpeed - currentLeftSpeed) + Kd * (expectedLeftSpeed - currentLeftSpeed) / timestep;
-         expectedRightSpeed = expectedRightSpeed + Kp * (expectedRightSpeed - currentRightSpeed) + Kd * (expectedLeftSpeed - currentLeftSpeed) / timestep;
               
          robotLeftSpeed = expectedLeftSpeed;
          robotRightSpeed = expectedRightSpeed;
   
             if (controlByPower == 1) {              
+                expectedLeftSpeed = expectedLeftSpeed + Kp * (expectedLeftSpeed - currentLeftSpeed);
+                expectedRightSpeed = expectedRightSpeed + Kp * (expectedRightSpeed - currentRightSpeed);
+                expectedLeftSpeed = Accelerate(expectedLeftSpeed, robotLeftSpeed, acc, timestep);         
+                expectedRightSpeed = Accelerate(expectedRightSpeed, robotRightSpeed, acc, timestep);
                 expectedLeftSpeed = expectedLeftSpeed / distancePerCount;
                 expectedRightSpeed = expectedRightSpeed / distancePerCount * Ed;
             }
@@ -716,6 +714,7 @@ void broadcastOdometry(void *par) {
         // Send resulting speed to wheels IF it is different from last time
         if (newLeftSpeed != oldLeftSpeed || newRightSpeed != oldRightSpeed) {
 //            dprint(term, "d\tGOSPD\t%d\t%d\t%d\t%d\n", oldLeftSpeed, newLeftSpeed, oldRightSpeed, newRightSpeed);  // For Debugging
+
             if (controlByPower == 1) {  
               if ((newLeftSpeed > 0) && (newLeftSpeed < minPowerValue))
               {
@@ -803,7 +802,7 @@ void broadcastOdometry(void *par) {
         deltaDistance = 0.5f * (double) (deltaTicksLeft + deltaTicksRight) * distancePerCount;
         deltaX = deltaDistance * cos(Heading);
         deltaY = deltaDistance * sin(Heading);
-
+        
         currentLeftSpeed = deltaTicksLeft * distancePerCount * timestep;
         currentRightSpeed = deltaTicksRight * distancePerCount * timestep;
 
