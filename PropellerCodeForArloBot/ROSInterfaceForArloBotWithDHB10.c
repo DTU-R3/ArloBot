@@ -108,8 +108,8 @@ I highly suggets you work through the instructions there and run the example pro
 // Define the encoders pins
 #define LEFT_A 3
 #define LEFT_B 2
-#define RIGHT_A 1
-#define RIGHT_B 0
+#define RIGHT_A 5
+#define RIGHT_B 4
 
 #ifndef SPEEDTOPOWER 
 #define SPEEDTOPOWER 0.5
@@ -235,7 +235,9 @@ static int encoderCountStack[128]; // If things get weird make this number bigge
 double Accelerate(double cmd_vel, double robot_vel, double acc, int timestep);
 static volatile double acc = 1.0; // meter per second square
 static volatile double Ed = 1.075; // ratio of right wheel / left wheel
-static volatile double Kp = 1, Ki =0.65, Kd = 0.3;
+static volatile double Kp = 0.3, Ki =0.65, Kd = 0.8;
+static volatile double currentLeftSpeed = 0.0, currentRightSpeed = 0.0;
+const int timestep = 100; // timestep as every 10 ms
 
 int main() {
 
@@ -604,8 +606,13 @@ int main() {
 
          expectedLeftSpeed = newCommandedVelocity - angularVelocityOffset;
          expectedRightSpeed = newCommandedVelocity + angularVelocityOffset;          
-         expectedLeftSpeed = Accelerate(expectedLeftSpeed, robotLeftSpeed, acc, 100);         
-         expectedRightSpeed = Accelerate(expectedRightSpeed, robotRightSpeed, acc, 100);     
+         expectedLeftSpeed = Accelerate(expectedLeftSpeed, robotLeftSpeed, acc, timestep);         
+         expectedRightSpeed = Accelerate(expectedRightSpeed, robotRightSpeed, acc, timestep);
+         
+         // Feedback control, PID
+         expectedLeftSpeed = expectedLeftSpeed + Kp * (expectedLeftSpeed - currentLeftSpeed) + Kd * (expectedLeftSpeed - currentLeftSpeed) / timestep;
+         expectedRightSpeed = expectedRightSpeed + Kp * (expectedRightSpeed - currentRightSpeed) + Kd * (expectedLeftSpeed - currentLeftSpeed) / timestep;
+              
          robotLeftSpeed = expectedLeftSpeed;
          robotRightSpeed = expectedRightSpeed;
   
@@ -796,6 +803,9 @@ void broadcastOdometry(void *par) {
         deltaDistance = 0.5f * (double) (deltaTicksLeft + deltaTicksRight) * distancePerCount;
         deltaX = deltaDistance * cos(Heading);
         deltaY = deltaDistance * sin(Heading);
+
+        currentLeftSpeed = deltaTicksLeft * distancePerCount * timestep;
+        currentRightSpeed = deltaTicksRight * distancePerCount * timestep;
 
         deltaTheta = (deltaTicksRight - deltaTicksLeft) * distancePerCount / trackWidth; 
         Heading += deltaTheta; 
