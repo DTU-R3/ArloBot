@@ -235,7 +235,7 @@ static int encoderCountStack[128]; // If things get weird make this number bigge
 double Accelerate(double cmd_vel, double robot_vel, double acc, int timestep);
 static volatile double acc = 1.0; // meter per second square
 static volatile double Ed = 1.075; // ratio of right wheel / left wheel
-static volatile double Kp = 0.1, Ki =0.65, Kd = 0.8;
+static volatile double Kp = 1, Ki =0.65, Kd = 0.8;
 static volatile double currentLeftSpeed = 0.0, currentRightSpeed = 0.0;
 const int timestep = 100; // timestep as every 10 ms
 
@@ -611,8 +611,8 @@ int main() {
          robotRightSpeed = expectedRightSpeed;
   
             if (controlByPower == 1) {              
-                expectedLeftSpeed = expectedLeftSpeed + Kp * (expectedLeftSpeed - currentLeftSpeed);
-                expectedRightSpeed = expectedRightSpeed + Kp * (expectedRightSpeed - currentRightSpeed);
+                expectedLeftSpeed = currentLeftSpeed + Kp * (expectedLeftSpeed - currentLeftSpeed) + Ki * (expectedLeftSpeed - currentLeftSpeed) / timestep;
+                expectedRightSpeed = currentLeftSpeed + Kp * (expectedRightSpeed - currentRightSpeed) + Ki * (expectedLeftSpeed - currentLeftSpeed) / timestep;
                 expectedLeftSpeed = Accelerate(expectedLeftSpeed, robotLeftSpeed, acc, timestep);         
                 expectedRightSpeed = Accelerate(expectedRightSpeed, robotRightSpeed, acc, timestep);
                 expectedLeftSpeed = expectedLeftSpeed / distancePerCount;
