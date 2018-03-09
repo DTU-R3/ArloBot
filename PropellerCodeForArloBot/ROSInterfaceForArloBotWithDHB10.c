@@ -615,8 +615,8 @@ int main() {
                 expectedRightSpeed = currentLeftSpeed + Kp * (expectedRightSpeed - currentRightSpeed) + Ki * (expectedLeftSpeed - currentLeftSpeed) / timestep;
                 expectedLeftSpeed = Accelerate(expectedLeftSpeed, robotLeftSpeed, acc, timestep);         
                 expectedRightSpeed = Accelerate(expectedRightSpeed, robotRightSpeed, acc, timestep);
-                expectedLeftSpeed = expectedLeftSpeed / distancePerCount;
-                expectedRightSpeed = expectedRightSpeed / distancePerCount * Ed;
+                expectedLeftSpeed = expectedLeftSpeed / distancePerCount * SPEEDTOPOWER;
+                expectedRightSpeed = expectedRightSpeed / distancePerCount * Ed * SPEEDTOPOWER;
             }
             else {
                 expectedLeftSpeed = expectedLeftSpeed / distancePerCount;
