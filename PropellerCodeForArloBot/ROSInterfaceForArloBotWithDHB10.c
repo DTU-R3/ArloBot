@@ -608,8 +608,8 @@ int main() {
          expectedRightSpeed = newCommandedVelocity + angularVelocityOffset;          
   
             if (controlByPower == 1) {              
-                expectedLeftSpeed = currentLeftSpeed + Kp * (expectedLeftSpeed - currentLeftSpeed); // + Ki * (expectedLeftSpeed - currentLeftSpeed) / timestep;
-                expectedRightSpeed = currentRightSpeed + Kp * (expectedRightSpeed - currentRightSpeed); // + Ki * (expectedLeftSpeed - currentLeftSpeed) / timestep;
+                expectedLeftSpeed = currentLeftSpeed + Kp * (expectedLeftSpeed - currentLeftSpeed) + Ki * (expectedLeftSpeed - currentLeftSpeed) / timestep;
+                expectedRightSpeed = currentRightSpeed + Kp * (expectedRightSpeed - currentRightSpeed) + Ki * (expectedLeftSpeed - currentLeftSpeed) / timestep;
                 expectedLeftSpeed = Accelerate(expectedLeftSpeed, robotLeftSpeed, acc, timestep);         
                 expectedRightSpeed = Accelerate(expectedRightSpeed, robotRightSpeed, acc, timestep);
                 robotLeftSpeed = expectedLeftSpeed;
