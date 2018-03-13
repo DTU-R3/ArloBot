@@ -67,9 +67,9 @@ class PropellerComm(object):
         # Store last x, y and heading for reuse when we reset
         # I took off off the ~, because that was causing these to reset to default on every restart
         # even if roscore was still up.
-        self.lastX = rospy.get_param("lastX", 0.0)
-        self.lastY = rospy.get_param("lastY", 0.0)
-        self.lastHeading = rospy.get_param("lastHeading", 0.0)
+        self.lastX = rospy.get_param("~lastX", 0.0)
+        self.lastY = rospy.get_param("~lastY", 0.0)
+        self.lastHeading = rospy.get_param("~lastHeading", 0.0)
         self.alternate_heading = self.lastHeading
         self.track_width = rospy.get_param("~driveGeometry/trackWidth", "0")
         self.distance_per_count = rospy.get_param("~driveGeometry/distancePerCount", "0")
