@@ -20,7 +20,7 @@
 
   <!-- ArloBot -->
   <!-- There is no actual ArloBot model, I never made one. -->
-  <xacro:include filename="$(find arlobot_description)/urdf/arlo.urdf.xacro"/>
+  <xacro:include filename="$(find arlobot_description)/urdf/arlo_docker.urdf.xacro"/>
 
   <!-- 3D Sensor -->
   <xacro:include filename="$(find arlobot_description)/urdf/asus_xtion_pro.urdf.xacro"/>
