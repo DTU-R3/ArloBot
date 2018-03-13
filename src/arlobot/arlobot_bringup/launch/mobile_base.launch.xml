@@ -10,7 +10,7 @@
     <param name="update_rate" value="30.0" />
     <param name="driveGeometry/trackWidth" value="0.403" />
     <param name="driveGeometry/distancePerCount" value="0.00338" />
-    <param name="ignoreProximity" value="True" />
+    <param name="ignoreProximity" value="False" />
     <param name="controlByPower" value="True" />
     <param name="acceleration" value="0.2" />
     <param name="wheelRatio" value="1.07" />
