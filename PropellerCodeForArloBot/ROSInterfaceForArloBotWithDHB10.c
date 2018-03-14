@@ -557,7 +557,7 @@ int main() {
         
         // Reactive control for demo    
         if (ignoreProximity == 0) {
-            int ping_slow_thres = 80;
+            int ping_slow_thres = 120;
             int ping_stop_thres = 20;  // threshold for ping sensors
             if (CommandedVelocity < 0 && pingArray[1] < ping_slow_thres) {
                 if (pingArray[1] > ping_stop_thres) {
