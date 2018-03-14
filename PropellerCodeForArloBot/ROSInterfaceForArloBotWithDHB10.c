@@ -238,7 +238,9 @@ static volatile double Ed = 1.075; // ratio of right wheel / left wheel
 static volatile double Kp = 1, Ki =0.65, Kd = 0.8;
 static volatile double currentLeftSpeed = 0.0, currentRightSpeed = 0.0;
 const int timestep = 100; // timestep as every 10 ms
-
+static volatile int ping_slow_thres = 120;
+static volatile int ping_stop_thres = 20;  // threshold for ping sensors
+            
 int main() {
 
     int wasEscaping = 0;
@@ -556,41 +558,10 @@ int main() {
             }
         
         // Reactive control for demo    
-        if (ignoreProximity == 0) {
-            int ping_slow_thres = 120;
-            int ping_stop_thres = 20;  // threshold for ping sensors
+        if (ignoreProximity == 0) {            
             if (CommandedVelocity < 0 && pingArray[1] < ping_slow_thres) {
-                if (pingArray[1] > ping_stop_thres) {
-                    newCommandedVelocity = (pingArray[1]-ping_stop_thres)*CommandedVelocity/(ping_slow_thres-ping_stop_thres)/2;
-                }
-                else {
-                    newCommandedVelocity = 0;
-                    angularVelocityOffset = 0; 
-                }                                                        
-            }              
-            else if (CommandedVelocity > 0 && pingArray[0] < ping_stop_thres) {
-                // If both left and right are blocked, robot stop
-                if (pingArray[2] < ping_stop_thres && pingArray[3] < ping_stop_thres) {
-                    newCommandedVelocity = 0;
-                    angularVelocityOffset = 0;
-                }                  
-                else if ( pingArray[2] > pingArray[3]) {
-                    newCommandedVelocity = 0;
-                    angularVelocityOffset = 0.5 * (trackWidth * 0.5);
-                }   
-                else if ( pingArray[2] < pingArray[3]) {
-                    newCommandedVelocity = 0;
-                    angularVelocityOffset = -0.5 * (trackWidth * 0.5);
-                }                                
-            }
-            else if (CommandedVelocity > 0 && pingArray[2] < ping_stop_thres) {
-                newCommandedVelocity = 0;
-                angularVelocityOffset = -0.5 * (trackWidth * 0.5);
-            }   
-            else if (CommandedVelocity > 0 && pingArray[3] < ping_stop_thres) {
-                newCommandedVelocity = 0;
-                angularVelocityOffset = 0.5 * (trackWidth * 0.5);
-            }      
+                newCommandedVelocity = (pingArray[1]-ping_stop_thres)*CommandedVelocity/(ping_slow_thres-ping_stop_thres)/2;                                                 
+            }                             
             else if (CommandedVelocity > 0 && pingArray[0] < ping_slow_thres) {
                 newCommandedVelocity = (pingArray[0]-ping_stop_thres)*CommandedVelocity/(ping_slow_thres-ping_stop_thres)/2;
             }              
@@ -621,6 +592,25 @@ int main() {
                 expectedLeftSpeed = expectedLeftSpeed / distancePerCount;
                 expectedRightSpeed = expectedRightSpeed / distancePerCount;
             }            
+            
+         if (ignoreProximity == 0) {
+            if (CommandedVelocity > 0 && pingArray[0] < ping_stop_thres) {
+                expectedLeftSpeed = 0;
+                expectedRightSpeed = 0;                             
+            }
+            else if (CommandedVelocity > 0 && pingArray[2] < ping_stop_thres) {
+                expectedLeftSpeed = minPowerValue;
+                expectedRightSpeed = -minPowerValue;   
+            }   
+            else if (CommandedVelocity > 0 && pingArray[3] < ping_stop_thres) {
+                expectedLeftSpeed = -minPowerValue;
+                expectedRightSpeed = minPowerValue;
+            }
+            else if (CommandedVelocity < 0 && pingArray[1] < ping_stop_thres) {
+                expectedLeftSpeed = 0;
+                expectedRightSpeed = 0; 
+            }                
+         }           
 
             newLeftSpeed = (int)expectedLeftSpeed;
             newRightSpeed = (int)expectedRightSpeed;
