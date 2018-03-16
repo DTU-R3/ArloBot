@@ -78,8 +78,6 @@ class PropellerComm(object):
         self.ignore_ir_sensors = rospy.get_param("~ignoreIRSensors", False)
         self.ignore_floor_sensors = rospy.get_param("~ignoreFloorSensors", False)
         self.control_by_power = rospy.get_param("~controlByPower", True)
-        self.acceleration = rospy.get_param("~acceleration", 0.2)
-        self.deceleration = rospy.get_param("~deceleration", 0.5)
         self.wheelRatio = rospy.get_param("~wheelRatio", 1.08)
         self.robotParamChanged = False
 

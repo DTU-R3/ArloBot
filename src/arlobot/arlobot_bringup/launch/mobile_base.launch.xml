@@ -12,8 +12,6 @@
     <param name="driveGeometry/distancePerCount" value="0.00338" />
     <param name="ignoreProximity" value="False" />
     <param name="controlByPower" value="True" />
-    <param name="acceleration" value="0.2" />
-    <param name="deceleration" value="0.2" />
     <param name="wheelRatio" value="1.07" />
     <remap from="arlobot/sensor_state" to="mobile_base/sensors/core" />
     <remap from="imu/data" to="mobile_base/sensors/imu_data" />
