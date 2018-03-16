@@ -79,6 +79,7 @@ class PropellerComm(object):
         self.ignore_floor_sensors = rospy.get_param("~ignoreFloorSensors", False)
         self.control_by_power = rospy.get_param("~controlByPower", True)
         self.acceleration = rospy.get_param("~acceleration", 0.2)
+        self.deceleration = rospy.get_param("~deceleration", 0.5)
         self.wheelRatio = rospy.get_param("~wheelRatio", 1.08)
         self.robotParamChanged = False
 
@@ -848,7 +849,7 @@ class PropellerComm(object):
             else:
                 control_by_power = 0
             # WARNING! If you change this check the buffer length in the Propeller C code!
-            message = 'd,%f,%f,%d,%d,%d,%d,%d,%f,%f,%f,%d,%f,%f\r' % (self.track_width, self.distance_per_count, ignore_proximity, ignore_cliff_sensors, ignore_ir_sensors, ignore_floor_sensors, ac_power, self.lastX, self.lastY, self.lastHeading, control_by_power, self.acceleration, self.wheelRatio)
+            message = 'd,%f,%f,%d,%d,%d,%d,%d,%f,%f,%f,%d,%f\r' % (self.track_width, self.distance_per_count, ignore_proximity, ignore_cliff_sensors, ignore_ir_sensors, ignore_floor_sensors, ac_power, self.lastX, self.lastY, self.lastHeading, control_by_power, self.wheelRatio)
             rospy.logdebug("Sending drive geometry params message: " + message)
             self._write_serial(message)
         else:
@@ -1005,7 +1006,7 @@ class PropellerComm(object):
                 else:
                     control_by_power = 0
                 # WARNING! If you change this check the buffer length in the Propeller C code!
-                message = 'd,%f,%f,%d,%d,%d,%d,%d, %d, %f, %f\r' % (self.track_width, self.distance_per_count, ignore_proximity, ignore_cliff_sensors, ignore_ir_sensors, ignore_floor_sensors, ac_power, control_by_power, self.acceleration, self.wheelRatio)
+                message = 'd,%f,%f,%d,%d,%d,%d,%d, %d, %f\r' % (self.track_width, self.distance_per_count, ignore_proximity, ignore_cliff_sensors, ignore_ir_sensors, ignore_floor_sensors, ac_power, control_by_power, self.wheelRatio)
                 self._write_serial(message)
                 self.robotParamChanged = False
 

@@ -232,8 +232,6 @@ static volatile int last_B[2] = {2,2};
 void encoderCount(void *par);
 static int encoderCountStack[128]; // If things get weird make this number bigger!
 
-double Accelerate(double cmd_vel, double robot_vel, double acc, int timestep);
-static volatile double acc = 1.0; // meter per second square
 static volatile double Ed = 1.075; // ratio of right wheel / left wheel
 static volatile double Kp = 1, Ki =0.65, Kd = 0.8;
 static volatile double currentLeftSpeed = 0.0, currentRightSpeed = 0.0;
@@ -339,10 +337,6 @@ int main() {
                     token = strtok(NULL, delimiter);
                 }
                 if (token != NULL) {
-                    acc = strtod(token, &unconverted);
-                    token = strtok(NULL, delimiter);
-                }
-                if (token != NULL) {
                     Ed = strtod(token, &unconverted);
                 }
                 gyroHeading = Heading;
@@ -410,7 +404,6 @@ int main() {
     double newCommandedVelocity;
     double CommandedAngularVelocity;
     double angularVelocityOffset = 0.0, expectedLeftSpeed, expectedRightSpeed;
-    double robotLeftSpeed = 0.0, robotRightSpeed = 0.0;
     int newLeftSpeed = 0, newRightSpeed = 0;
 
     void clearTwistRequest() {
@@ -490,10 +483,6 @@ int main() {
                 }
                 if (token != NULL) {
                     controlByPower = (int)(strtod(token, &unconverted));
-                    token = strtok(NULL, delimiter);
-                }
-                if (token != NULL) {
-                    acc = strtod(token, &unconverted);
                     token = strtok(NULL, delimiter);
                 }
                 if (token != NULL) {
@@ -581,10 +570,6 @@ int main() {
             if (controlByPower == 1) {              
                 expectedLeftSpeed = currentLeftSpeed + Kp * (expectedLeftSpeed - currentLeftSpeed) + Ki * (expectedLeftSpeed - currentLeftSpeed) / timestep;
                 expectedRightSpeed = currentRightSpeed + Kp * (expectedRightSpeed - currentRightSpeed) + Ki * (expectedRightSpeed - currentRightSpeed) / timestep;
-                // expectedLeftSpeed = Accelerate(expectedLeftSpeed, robotLeftSpeed, acc, timestep);         
-                // expectedRightSpeed = Accelerate(expectedRightSpeed, robotRightSpeed, acc, timestep);
-                // robotLeftSpeed = expectedLeftSpeed;
-                // robotRightSpeed = expectedRightSpeed;
                 expectedLeftSpeed = expectedLeftSpeed / distancePerCount * SPEEDTOPOWER;
                 expectedRightSpeed = expectedRightSpeed / distancePerCount * Ed * SPEEDTOPOWER;
             }
@@ -628,20 +613,6 @@ int main() {
             broadcastSpeedRight = newRightSpeed;
     }
 }
-
-double Accelerate(double cmd_vel, double robot_vel, double acc, int timestep) {
-    double vel;
-    if (cmd_vel - robot_vel > acc/timestep) {
-        vel = robot_vel + acc/timestep;
-    }
-    else if (robot_vel - cmd_vel > acc/timestep) {
-        vel = robot_vel - acc/timestep;
-    }
-    else {
-        vel = cmd_vel;
-    }       
-    return vel;
-}  
 
 void broadcastOdometry(void *par) {
 
