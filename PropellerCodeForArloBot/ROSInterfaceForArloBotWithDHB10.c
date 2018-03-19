@@ -568,8 +568,8 @@ int main() {
          expectedRightSpeed = newCommandedVelocity + angularVelocityOffset;          
   
             if (controlByPower == 1) {              
-                expectedLeftSpeed = currentLeftSpeed + Kp * (expectedLeftSpeed - currentLeftSpeed) + Ki * (expectedLeftSpeed - currentLeftSpeed) / timestep;
-                expectedRightSpeed = currentRightSpeed + Kp * (expectedRightSpeed - currentRightSpeed) + Ki * (expectedRightSpeed - currentRightSpeed) / timestep;
+                expectedLeftSpeed = currentLeftSpeed + Kp * (expectedLeftSpeed - currentLeftSpeed); // + Ki * (expectedLeftSpeed - currentLeftSpeed) / timestep;
+                expectedRightSpeed = currentRightSpeed + Kp * (expectedRightSpeed - currentRightSpeed); // + Ki * (expectedRightSpeed - currentRightSpeed) / timestep;
                 expectedLeftSpeed = expectedLeftSpeed / distancePerCount * SPEEDTOPOWER;
                 expectedRightSpeed = expectedRightSpeed / distancePerCount * Ed * SPEEDTOPOWER;
             }
