@@ -335,6 +335,14 @@ int main() {
                 if (token != NULL) {
                     controlByPower = (int) (strtod(token, &unconverted));
                     token = strtok(NULL, delimiter);
+                    if (controlByPower == 0) {
+                        abd_speedLimit = MAXIMUM_SPEED;
+                        abdR_speedLimit = MAXIMUM_SPEED;
+                    }
+                    else {
+                        abd_speedLimit = MAXIMUM_SPEED_POWER;
+                        abdR_speedLimit = MAXIMUM_SPEED_POWER;
+                    }                                            
                 }
                 if (token != NULL) {
                     Ed = strtod(token, &unconverted);
@@ -484,6 +492,14 @@ int main() {
                 if (token != NULL) {
                     controlByPower = (int)(strtod(token, &unconverted));
                     token = strtok(NULL, delimiter);
+                    if (controlByPower == 0) {
+                        abd_speedLimit = MAXIMUM_SPEED;
+                        abdR_speedLimit = MAXIMUM_SPEED;
+                    }
+                    else {
+                        abd_speedLimit = MAXIMUM_SPEED_POWER;
+                        abdR_speedLimit = MAXIMUM_SPEED_POWER;
+                    }  
                 }
                 if (token != NULL) {
                     Ed = strtod(token, &unconverted);
@@ -654,8 +670,6 @@ void broadcastOdometry(void *par) {
 
     int i;
     while (1) {
-        if (CNT - t > dt) {
-            t += dt;
 
         oldLeftSpeed = newLeftSpeed;
         oldRightSpeed = newRightSpeed;
@@ -841,7 +855,6 @@ void broadcastOdometry(void *par) {
         #ifdef debugModeOn
         dprint(term, "DEBUG: %d %d %d %d %d\n", ignoreProximity, ignoreCliffSensors, ignoreIRSensors, ignoreFloorSensors, pluggedIn);
         #endif
-        }
     }
 }
 
