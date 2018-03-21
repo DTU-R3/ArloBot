@@ -206,6 +206,7 @@ onto your Propeller Activity board!
 
 // Maximum speed in ticks per second. Even if ROS asks us to go faster, we will not.
 #define MAXIMUM_SPEED 220 // Two TPS faster than what we are telling ROS is the maximum speed.
+#define MAXIMUM_SPEED_POWER 100 // Speed limit when control by power
 // Use MotorReponseTesting.c if you want to test/adjust this,
 // And be sure to edit the ROS config files with the maximum linear (m/s) and angular (rad/s) velocity
 
@@ -213,7 +214,7 @@ onto your Propeller Activity board!
 // The range is 0 to 32767 with a default of 512
 // according to https://www.parallax.com/sites/default/files/downloads/28231-DHB-10-Arlo-Firmware-Guide-v1.0.pdf
 // ROS DWA doesn't like it when the robot throttles acceleration. So we are ramping it up a bit from the default.
-#define DHB10_ACC 1024
+#define DHB10_ACC 512
 // Use MotorReponseTesting.c if you want to test/adjust this,
 // And be sure to edit the ROS config files with the maximum linear (m/s^2) and angular (rad/s^2) acceleration
 // Calculator: http://www.smartconversion.com/unit_calculation/Acceleration_calculator.aspx
@@ -223,7 +224,7 @@ If it runs too fast we overwhelm serial connections and crash things or get garb
 Running too slow will reduce the responsiveness of the robot.
 Remember though that going faster and "hanging" isn't more responsive.
 */
-#define dhb10OverloadPause 2 // Pause before each read/write to DHB10 to avoid overloading it.
+#define dhb10OverloadPause 10 // Pause before each read/write to DHB10 to avoid overloading it.
 // 1 seems to work fine. 2 seems perfectly safe without any ill affects. I suggest filing a github issue before increasing this.
 
 /* Timeout setting. After this many seconds the robot will stop if it
