@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+<robot name="arlobot_hardware" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <!-- Macro for ArloBot body. -->
+
+  <xacro:property name="base_x" value="0.33" />
+  <xacro:property name="base_y" value="0.33" />
+
+  <xacro:macro name="create">
+    <material name="Green">
+      <color rgba="0.0 0.8 0.0 1.0"/>
+    </material>
+    <material name ="veryDarkGrey">
+      <color rgba=".2 .2 .2 1"/>
+    </material>
+    <material name ="light_grey">
+      <color rgba="0.6 0.6 0.6 1"/>
+    </material>
+
+    <!-- base_footprint is a fictitious link(frame) that is on the ground right below base_link origin, navigation stack depends on this frame -->
+    <link name="base_footprint">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <box size="0.001 0.001 0.001" />
+        </geometry>
+        <material name="Green" />
+      </visual>
+
+      <collision>
+        <origin xyz="0 0 0.017" rpy="0 0 0" />
+        <geometry>
+          <box size="0.001 0.001 0.001" />
+        </geometry>
+      </collision>
+    </link>
+
+    <link name="raspicam">
+      <inertial>
+        <origin xyz="0 0 0"/>
+        <mass value="0.01" />
+        <inertia ixx="0.001" ixy="0.0" ixz="0.0"
+          iyy="0.001" iyz="0.0" izz="0.001" />
+      </inertial>
+
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <cylinder radius="0.01" length = "0.005"/>
+        </geometry>
+        <material name ="Green" />
+      </visual>
+
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <cylinder radius="0.01" length = "0.005"/>
+        </geometry>
+      </collision>
+    </link>
+
+    <joint name="raspicam_footprint" type="fixed">
+      <origin xyz="0.083 0 0.37" rpy="0 0 -1.5708"/>
+      <parent link="base_footprint"/>
+      <child link="raspicam" />
+    </joint>
+  </xacro:macro>
+</robot>

@@ -20,10 +20,11 @@
 
   <!-- ArloBot -->
   <!-- There is no actual ArloBot model, I never made one. -->
-  <xacro:include filename="$(find arlobot_description)/urdf/arlo_docker.urdf.xacro"/>
+  <xacro:include filename="$(find arlobot_description)/urdf/arlo_simplified.urdf.xacro"/>
 
-  <!-- 3D Sensor -->
+  <!-- 3D Sensor 
   <xacro:include filename="$(find arlobot_description)/urdf/asus_xtion_pro.urdf.xacro"/>
+  -->
 
   <create/>
   <stack_circles parent="base_link"/>
