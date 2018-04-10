@@ -306,7 +306,11 @@ class PropellerComm(object):
           alternate_theta = float(line_parts[4])
 
           vx = float(line_parts[5])
-          omega = float(line_parts[6])
+          # literal for float error always happen on this line
+          # omega = float(line_parts[6])
+          answer_decode = line_parts[6].replace("\x00", "")
+          answer_strip = str(answer_decode.strip())
+          omega = float(answer_strip)
 	except:
 	  return
 
