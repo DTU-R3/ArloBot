@@ -298,15 +298,17 @@ class PropellerComm(object):
         if parts_count < 8:  # Just discard short lines, increment this as lines get longer
             rospy.logwarn("Short line from Propeller board: " + str(parts_count))
             return
+        try:
+          x = float(line_parts[1])
+          y = float(line_parts[2])
+          # 3 is odom based heading and 4 is gyro based
+          theta = float(line_parts[3])  # On ArloBot odometry derived heading works best.
+          alternate_theta = float(line_parts[4])
 
-        x = float(line_parts[1])
-        y = float(line_parts[2])
-        # 3 is odom based heading and 4 is gyro based
-        theta = float(line_parts[3])  # On ArloBot odometry derived heading works best.
-        alternate_theta = float(line_parts[4])
-
-        vx = float(line_parts[5])
-        omega = float(line_parts[6])
+          vx = float(line_parts[5])
+          omega = float(line_parts[6])
+	except:
+	  return
 
         quaternion = Quaternion()
         quaternion.x = 0.0
