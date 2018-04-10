@@ -830,7 +830,8 @@ void broadcastOdometry(void *par) {
         #endif
         dprint(term, "}\n");
         #endif
-
+        
+        /*
         // Send a regular "status" update to ROS including information that does not need to be refreshed as often as the odometry.
         throttleStatus = throttleStatus + 1;
         if (throttleStatus > 9) {
@@ -855,6 +856,7 @@ void broadcastOdometry(void *par) {
         #ifdef debugModeOn
         dprint(term, "DEBUG: %d %d %d %d %d\n", ignoreProximity, ignoreCliffSensors, ignoreIRSensors, ignoreFloorSensors, pluggedIn);
         #endif
+        */
     }
 }
 
