@@ -305,14 +305,18 @@ class PropellerComm(object):
           theta = float(line_parts[3])  # On ArloBot odometry derived heading works best.
           alternate_theta = float(line_parts[4])
 
-          vx = float(line_parts[5])
-          # literal for float error always happen on this line
-          # omega = float(line_parts[6])
-          answer_decode = line_parts[6].replace("\x00", "")
-          answer_strip = str(answer_decode.strip())
-          omega = float(answer_strip)
-	except:
-	  return
+        try:
+            x = float(line_parts[1])
+            y = float(line_parts[2])
+            # 3 is odom based heading and 4 is gyro based
+            theta = float(line_parts[3])  # On ArloBot odometry derived heading works best.
+            alternate_theta = float(line_parts[4])
+
+            vx = float(line_parts[5])
+            omega = float(line_parts[6])
+        except:
+            rospy.logwarn("Bad Propeller odometry floats")
+            return
 
         quaternion = Quaternion()
         quaternion.x = 0.0
@@ -541,10 +545,12 @@ class PropellerComm(object):
         # but costmap isn't watching it at the moment. I think it is too erratic for that.
 
         try:
-            sensor_data = json.loads(line_parts[9])
+            sensor_data = json.loads(line_parts[7])
             if 'p3' not in sensor_data:
-              return
+                rospy.logwarn("Incomplete Propeller JSON for PING sensors")
+                return
         except:
+            rospy.logwarn("Bad Propeller JSON for PING sensors")
             return
         self._ping_publisher.publish(line_parts[9])
         ping = [artificial_far_distance] * 10
