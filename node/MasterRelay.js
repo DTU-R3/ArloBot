@@ -24,10 +24,16 @@ function usbRelay(operation, runFromCommandLine) {
         }
         working = false;
     };
-    if (operation !== 'read' || !working) {
+    if (!personalData.demoWebSite && (operation !== 'read' || !working)) {
         working = true;
         getPortName()
             .then((port) => {
+                if (webModel.debugging) {
+                    console.log('Master Relay Port:', port);
+                }
+                if (webModel.debugging) {
+                    console.log('Master Relay opeartion:', operation);
+                }
 
                 if (operation === 'toggle') {
                     if (!webModel.masterRelayOn) {
@@ -38,7 +44,7 @@ function usbRelay(operation, runFromCommandLine) {
                 }
 
                 const portObj = new SerialPort(port, {
-                    baudrate: 19200,
+                    baudRate: 19200,
                     autoOpen: false
                 });
 
@@ -92,6 +98,14 @@ function usbRelay(operation, runFromCommandLine) {
             .catch(error => {
                 wrapUp(runFromCommandLine, error);
             });
+    } else if (personalData.demoWebSite) {
+        if (operation === 'toggle') {
+            if (!webModel.masterRelayOn) {
+                webModelFunctions.update('masterRelayOn', true);
+            } else {
+                webModelFunctions.update('masterRelayOn', false);
+            }
+        }
     }
 }
 module.exports = usbRelay;

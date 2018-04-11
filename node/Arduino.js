@@ -187,7 +187,7 @@ class Arduino {
                     // };
 
                     this.portObj = new SerialPort(port, {
-                        baudrate: baudrate,
+                        baudRate: baudrate,
                         autoOpen: false
                     });
 
@@ -228,6 +228,13 @@ class Arduino {
                             }
                         }
                     });
+
+                    this.portObj.on('close', () => {
+                        this.pause();
+                        this.portObj = null;
+                        this.programIsBusy = false;
+                        webModelFunctions.update('neoPixelsOn', false);
+                    })
 
                     this.portObj.open((error) => {
                         if (error) {
@@ -275,7 +282,7 @@ class Arduino {
             // Give it time to send the new command at least once.
             this.pause();
             if (this.portObj) {
-                this.portObj.close();
+              this.portObj.close();
             }
             this.programIsBusy = false;
             webModelFunctions.update('neoPixelsOn', false);
