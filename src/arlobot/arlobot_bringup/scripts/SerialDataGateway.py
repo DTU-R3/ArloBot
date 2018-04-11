@@ -54,7 +54,7 @@ class SerialDataGateway(object):
         #stringIO = StringIO()
         while self._KeepRunning:
             try:
-                data = self._Serial.readline()
+                data = self._Serial.readline().strip()
             except:
                 rospy.loginfo("SERIAL PORT Listen Error")
                 raise
