@@ -542,6 +542,8 @@ class PropellerComm(object):
 
         try:
             sensor_data = json.loads(line_parts[9])
+            if 'p3' not in sensor_data:
+              return
         except:
             return
         self._ping_publisher.publish(line_parts[9])
