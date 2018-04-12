@@ -298,12 +298,6 @@ class PropellerComm(object):
         if parts_count < 8:  # Just discard short lines, increment this as lines get longer
             rospy.logwarn("Short line from Propeller board: " + str(parts_count))
             return
-        try:
-          x = float(line_parts[1])
-          y = float(line_parts[2])
-          # 3 is odom based heading and 4 is gyro based
-          theta = float(line_parts[3])  # On ArloBot odometry derived heading works best.
-          alternate_theta = float(line_parts[4])
 
         try:
             x = float(line_parts[1])
@@ -545,7 +539,7 @@ class PropellerComm(object):
         # but costmap isn't watching it at the moment. I think it is too erratic for that.
 
         try:
-            sensor_data = json.loads(line_parts[7])
+            sensor_data = json.loads(line_parts[9])
             if 'p3' not in sensor_data:
                 rospy.logwarn("Incomplete Propeller JSON for PING sensors")
                 return
