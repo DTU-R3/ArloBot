@@ -770,9 +770,24 @@ void broadcastOdometry(void *par) {
         #endif
         pause(dhb10OverloadPause);
 
-
+        if(ticksLeft == 0 && ticksRight == 0) {
+            ticksLeftOld = ticksLeft;
+            ticksRightOld = ticksRight;
+        }          
+        
         deltaTicksLeft = ticksLeft - ticksLeftOld;
         deltaTicksRight = ticksRight - ticksRightOld;
+        
+        if(fabs(deltaTicksLeft) > 10000) {
+            ticksLeftOld = ticksLeft;
+            deltaTicksLeft = 0;
+        }     
+        
+        if(fabs(deltaTicksRight) > 10000) {
+            ticksRightOld = ticksRight;
+            deltaTicksRight = 0;
+        }               
+        
         deltaDistance = 0.5f * (double) (deltaTicksLeft + deltaTicksRight) * distancePerCount;
         deltaX = deltaDistance * cos(Heading);
         deltaY = deltaDistance * sin(Heading);
