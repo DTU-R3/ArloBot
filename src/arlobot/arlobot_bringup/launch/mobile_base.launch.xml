@@ -18,6 +18,7 @@
     <remap from="imu/raw" to="mobile_base/sensors/imu_data_raw" />
     <!--rosparam file="$(env HOME)/.arlobot/arlobot.yaml" command="load" /-->
   </node>
+  <node pkg="arlobot_bringup" type="joy_reset.py" name="arlobot_joyreset"/>
 
   <!-- Remember to boradcoast base_link to odom Transform from propellerbot_node when robot_pose_ekf is not used -->
 
