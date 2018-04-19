@@ -107,6 +107,7 @@ class PropellerComm(object):
         # Subscriptions
         rospy.Subscriber("cmd_vel", Twist, self._handle_velocity_command)  # Is this line or the below bad redundancy?
         rospy.Subscriber("arlobot_safety/safetyStatus", arloSafety, self._safety_shutdown)  # Safety Shutdown
+        rospy.Subscriber("arlobot/reset_motorBoard", Bool, self._handle_reset_command)
 
         # Publishers
         self._SerialPublisher = rospy.Publisher('serial', String, queue_size=10)
@@ -825,7 +826,15 @@ class PropellerComm(object):
             message = 's,0.0,0.0\r'  # Tell it to be still if it is not safe to operate
             rospy.logdebug("Sending speed command message: " + message)
             self._write_serial(message)
-	--zhongyu	"""
+	--zhongyu
+	"""
+    def _handle_reset_command(self, reset_command):
+        if reset_command.data:
+          reset = 1
+        else:
+          reset = 0
+        message = 'r,%d\r' % (reset)
+        self._write_serial(message)
 
     def _initialize_drive_geometry(self, line_parts):
         """ Send parameters from YAML file to Propeller board. """

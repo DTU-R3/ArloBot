@@ -110,6 +110,7 @@ I highly suggets you work through the instructions there and run the example pro
 #define LEFT_B 2
 #define RIGHT_A 5
 #define RIGHT_B 4
+#define RST 6
 
 #ifndef SPEEDTOPOWER 
 #define SPEEDTOPOWER 0.5
@@ -545,6 +546,24 @@ int main() {
                 }
                 if (token != NULL) {
                     abdR_speedLimit = strtod(token, &unconverted);
+                }
+                timeoutCounter = 0;
+            } else if (buf[0] == 'r') {
+                //Update the speedLimit and acceleration
+                char *token;
+                token = strtok(buf, delimiter);
+                token = strtok(NULL, delimiter);
+                char *unconverted;
+                int rst_cmd = 0;
+                if (token != NULL) {
+                    rst_cmd = strtod(token, &unconverted);
+                    token = strtok(NULL, delimiter);
+                }
+                if (rst_cmd == 1) {
+                    low(RST);                                  // Reset
+                    pause(100); 
+                    high(RST);
+                    rst_cmd = 0;
                 }
                 timeoutCounter = 0;
             }
