@@ -797,12 +797,12 @@ void broadcastOdometry(void *par) {
         deltaTicksLeft = ticksLeft - ticksLeftOld;
         deltaTicksRight = ticksRight - ticksRightOld;
         
-        if(fabs(deltaTicksLeft) > 10000) {
+        if(fabs(deltaTicksLeft) > 100) {
             ticksLeftOld = ticksLeft;
             deltaTicksLeft = 0;
         }     
         
-        if(fabs(deltaTicksRight) > 10000) {
+        if(fabs(deltaTicksRight) > 100) {
             ticksRightOld = ticksRight;
             deltaTicksRight = 0;
         }               
