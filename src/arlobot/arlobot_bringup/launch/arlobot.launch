@@ -1,0 +1,19 @@
+<launch>
+  <!-- rosbridge -->
+  <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch" />
+
+  <!-- arlobot -->
+  <include file="$(find arlobot_bringup)/launch/minimal.launch" />
+  
+  <!-- raspicam -->
+  <include file="$(find raspicam_node)/launch/camerav2_1640x1232_4fps.launch" />
+
+  <!-- aruco_detect -->
+  <include file="$(find aruco_detect)/launch/aruco_detect.launch" />
+
+  <!-- waypoint_nav -->
+  <include file="$(find waypoint_nav)/launch/fiducial_encoder_waypoint.launch" />
+
+</launch>
+
+
