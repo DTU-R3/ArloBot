@@ -13,7 +13,7 @@
 
   <!-- waypoint_nav -->
   <include file="$(find waypoint_nav)/launch/fiducial_encoder_waypoint.launch" />
-
+ 
 </launch>
 
 
