@@ -18,7 +18,7 @@ class CSV_log(object):
       self.file_name = 'log.csv'
     
     # Subcribers 
-    serial_sub = rospy.Subscriber('serial', String, self.SerialCB)    
+    rospy.Subscriber('serial', String, self.SerialCB)    
   
     self.csvfile = open(self.file_name, 'w') 
     fieldnames = ['timestamp', 'x', 'y', 'theta', 'V', 'Omega', 'Left_count', 'Right_count'] 
