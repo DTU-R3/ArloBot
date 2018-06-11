@@ -13,7 +13,10 @@
 
   <!-- waypoint_nav -->
   <include file="$(find waypoint_nav)/launch/fiducial_encoder_waypoint.launch" />
-   
+  
+  <!-- odometry_control -->
+  <include file="$(find waypoint_nav)/launch/odometry_control.launch" />
+    
 </launch>
 
 
