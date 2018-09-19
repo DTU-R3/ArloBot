@@ -80,7 +80,6 @@ class PropellerComm(object):
         self.control_by_power = rospy.get_param("~controlByPower", True)
         self.wheelRatio = rospy.get_param("~wheelRatio", 1.08)
         self.robotParamChanged = False
-        self.geo_fencing = False
 
         # Get motor relay numbers for use later in _HandleUSBRelayStatus if USB Relay is in use:
         self.relayExists = rospy.get_param("~usbRelayInstalled", False)
@@ -109,7 +108,6 @@ class PropellerComm(object):
         rospy.Subscriber("cmd_vel", Twist, self._handle_velocity_command)  # Is this line or the below bad redundancy?
         rospy.Subscriber("arlobot_safety/safetyStatus", arloSafety, self._safety_shutdown)  # Safety Shutdown
         rospy.Subscriber("arlobot/reset_motorBoard", Bool, self._handle_reset_command)
-        rospy.Subscriber("geo_fencing", Bool, self._handle_geo_fencing)
 
         # Publishers
         self._SerialPublisher = rospy.Publisher('serial', String, queue_size=10)
@@ -812,15 +810,10 @@ class PropellerComm(object):
         # to deal with maximum and minimum speeds,
         # which are dealt with in ArloBot on the Activity Board itself in the Propeller code.
 	v = twist_command.linear.x  # m/s
-	if self.geo_fencing and v > 0:
-	  v = 0
         omega = twist_command.angular.z  # rad/s
         rospy.logdebug("Handling twist command: " + str(v) + "," + str(omega))
         message = 's,%.3f,%.3f\r' % (v, omega)
         self._write_serial(message)
-	
-    def _handle_geo_fencing(self, _geofencing_command):
-        self.geo_fencing = _geofencing_command.data
 	
     def _handle_reset_command(self, reset_command):
         if reset_command.data:
