@@ -59,10 +59,39 @@
       </collision>
     </link>
 
+    <link name="laser">
+      <inertial>
+        <origin xyz="0 0 0"/>
+        <mass value="0.01" />
+        <inertia ixx="0.001" ixy="0.0" ixz="0.0"
+          iyy="0.001" iyz="0.0" izz="0.001" />
+      </inertial>
+
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <cylinder radius="0.01" length = "0.005"/>
+        </geometry>
+        <material name ="Green" />
+      </visual>
+
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <cylinder radius="0.01" length = "0.005"/>
+        </geometry>
+      </collision>
+    </link>
+
     <joint name="raspicam_footprint" type="fixed">
       <origin xyz="0.083 0 0.37" rpy="0 0 -1.5708"/>
       <parent link="base_footprint"/>
       <child link="raspicam" />
+    </joint>
+    <joint name="laser_footprint" type="fixed">
+      <origin xyz="0 0 0.4" rpy="0 0 0"/>
+      <parent link="base_footprint"/>
+      <child link="laser" />
     </joint>
   </xacro:macro>
 </robot>
