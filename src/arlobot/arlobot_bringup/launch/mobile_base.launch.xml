@@ -7,6 +7,7 @@
 <launch>
   <!-- Turtlebot Driver -->
   <node pkg="arlobot_bringup" type="propellerbot_node.py" name="arlobot" respawn="true" args="--respawnable">
+    <param name="port" value="/dev/serial/by-id/usb-Parallax_Propeller_Activity_Board_WX_WX27NY4-if00-port0" />
     <param name="bonus" value="false" />
     <param name="update_rate" value="30.0" />
     <param name="driveGeometry/trackWidth" value="0.403" />
