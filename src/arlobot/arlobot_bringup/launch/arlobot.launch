@@ -16,6 +16,9 @@
   
   <!-- odometry_control -->
   <include file="$(find waypoint_nav)/launch/odometry_control.launch" />
+
+  <!-- espeak -->
+  <include file="$(find alex_iot)/launch/espeak.launch" />
     
 </launch>
 
