@@ -5,6 +5,9 @@
   <!-- arlobot -->
   <include file="$(find arlobot_bringup)/launch/minimal.launch" />
   
+  <!-- mqtt -->
+  <include file="$(find mqtt)/src/alex-iot.launch" />
+
   <!-- raspicam -->
   <include file="$(find raspicam_node)/launch/camerav2_1640x1232_4fps.launch" />
 
