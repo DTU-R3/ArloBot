@@ -13,8 +13,6 @@
     <param name="driveGeometry/trackWidth" value="0.403" />
     <param name="driveGeometry/distancePerCount" value="0.00338" />
     <param name="ignoreProximity" value="False" />
-    <param name="controlByPower" value="False" />
-    <param name="wheelRatio" value="1.07" />
     <remap from="arlobot/sensor_state" to="mobile_base/sensors/core" />
     <remap from="imu/data" to="mobile_base/sensors/imu_data" />
     <remap from="imu/raw" to="mobile_base/sensors/imu_data_raw" />

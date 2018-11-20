@@ -77,8 +77,6 @@ class PropellerComm(object):
         self.ignore_cliff_sensors = rospy.get_param("~ignoreCliffSensors", False)
         self.ignore_ir_sensors = rospy.get_param("~ignoreIRSensors", False)
         self.ignore_floor_sensors = rospy.get_param("~ignoreFloorSensors", False)
-        self.control_by_power = rospy.get_param("~controlByPower", True)
-        self.wheelRatio = rospy.get_param("~wheelRatio", 1.08)
         self.robotParamChanged = False
 
         # Get motor relay numbers for use later in _HandleUSBRelayStatus if USB Relay is in use:
@@ -107,7 +105,6 @@ class PropellerComm(object):
         # Subscriptions
         rospy.Subscriber("cmd_vel", Twist, self._handle_velocity_command)  # Is this line or the below bad redundancy?
         rospy.Subscriber("arlobot_safety/safetyStatus", arloSafety, self._safety_shutdown)  # Safety Shutdown
-        rospy.Subscriber("arlobot/reset_motorBoard", Bool, self._handle_reset_command)
 
         # Publishers
         self._SerialPublisher = rospy.Publisher('serial', String, queue_size=10)
@@ -151,7 +148,7 @@ class PropellerComm(object):
         # rospy.logdebug(str(self._Counter) + " " + line)
         # if self._Counter % 50 == 0:
         self._SerialPublisher.publish(String(str(self._Counter) + ", in:  " + line))
-	print line
+        print line
         if len(line) > 0:
             line_parts = line.split('\t')
             # We should broadcast the odometry no matter what. Even if the motors are off, or location is useful!
@@ -809,18 +806,10 @@ class PropellerComm(object):
         # NOTE: turtlebot_node has a lot of code under its cmd_vel function
         # to deal with maximum and minimum speeds,
         # which are dealt with in ArloBot on the Activity Board itself in the Propeller code.
-	v = twist_command.linear.x  # m/s
+        v = twist_command.linear.x  # m/s
         omega = twist_command.angular.z  # rad/s
         rospy.logdebug("Handling twist command: " + str(v) + "," + str(omega))
         message = 's,%.3f,%.3f\r' % (v, omega)
-        self._write_serial(message)
-	
-    def _handle_reset_command(self, reset_command):
-        if reset_command.data:
-          reset = 1
-        else:
-          reset = 0
-        message = 'r,%d\r' % (reset)
         self._write_serial(message)
 
     def _initialize_drive_geometry(self, line_parts):
@@ -846,12 +835,8 @@ class PropellerComm(object):
                 ac_power = 1
             else:
                 ac_power = 0
-            if (self.control_by_power):
-                control_by_power = 1
-            else:
-                control_by_power = 0
             # WARNING! If you change this check the buffer length in the Propeller C code!
-            message = 'd,%f,%f,%d,%d,%d,%d,%d,%f,%f,%f,%d,%f\r' % (self.track_width, self.distance_per_count, ignore_proximity, ignore_cliff_sensors, ignore_ir_sensors, ignore_floor_sensors, ac_power, self.lastX, self.lastY, self.lastHeading, control_by_power, self.wheelRatio)
+            message = 'd,%f,%f,%d,%d,%d,%d,%d,%f,%f,%f,%d,%f\r' % (self.track_width, self.distance_per_count, ignore_proximity, ignore_cliff_sensors, ignore_ir_sensors, ignore_floor_sensors, ac_power, self.lastX, self.lastY, self.lastHeading)
             rospy.logdebug("Sending drive geometry params message: " + message)
             self._write_serial(message)
         else:
@@ -1003,12 +988,8 @@ class PropellerComm(object):
                     ac_power = 1
                 else:
                     ac_power = 0
-                if (self.control_by_power):
-                    control_by_power = 1
-                else:
-                    control_by_power = 0
                 # WARNING! If you change this check the buffer length in the Propeller C code!
-                message = 'd,%f,%f,%d,%d,%d,%d,%d, %d, %f\r' % (self.track_width, self.distance_per_count, ignore_proximity, ignore_cliff_sensors, ignore_ir_sensors, ignore_floor_sensors, ac_power, control_by_power, self.wheelRatio)
+                message = 'd,%f,%f,%d,%d,%d,%d,%d, %d, %f\r' % (self.track_width, self.distance_per_count, ignore_proximity, ignore_cliff_sensors, ignore_ir_sensors, ignore_floor_sensors, ac_power)
                 self._write_serial(message)
                 self.robotParamChanged = False
 

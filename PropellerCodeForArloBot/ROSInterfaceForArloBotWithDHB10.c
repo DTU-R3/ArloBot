@@ -218,7 +218,7 @@ ignoreFloorSensors = 0,
 ignoreIRSensors = 0,
 pluggedIn = 0;
 
-static volatile int controlByPower = 1, minPowerValue = 25;
+static volatile int minPowerValue = 25;
 
 void safetyOverride(void *par); // Use a cog to squelch incoming commands and perform safety procedures like halting, backing off, avoiding cliffs, calling for help, etc.
 // This can use proximity sensors to detect obstacles (including people) and cliffs
@@ -226,17 +226,6 @@ void safetyOverride(void *par); // Use a cog to squelch incoming commands and pe
 // This can use the gyro to detect significant heading errors due to slipping wheels when an obstacle is encountered or high centered
 static int safetyOverrideStack[128]; // If things get weird make this number bigger!
 
-// Add encoders to the propeller board and start a cog to count the ticks
-static volatile long int encoder_ticks[2] = {0,0};
-static volatile int last_A[2] = {2,2};
-static volatile int last_B[2] = {2,2};
-void encoderCount(void *par);
-static int encoderCountStack[128]; // If things get weird make this number bigger!
-
-static volatile double Ed = 1.075; // ratio of right wheel / left wheel
-static volatile double Kp = 1, Ki =0.65, Kd = 0.8;
-static volatile double currentLeftSpeed = 0.0, currentRightSpeed = 0.0;
-const int timestep = 100; // timestep as every 10 ms
 static volatile int ping_slow_thres = 120;
 static volatile int ping_stop_thres = 20;  // threshold for ping sensors
             
@@ -333,21 +322,6 @@ int main() {
                     Heading = strtod(token, &unconverted);
                     token = strtok(NULL, delimiter);
                 }
-                if (token != NULL) {
-                    controlByPower = (int) (strtod(token, &unconverted));
-                    token = strtok(NULL, delimiter);
-                    if (controlByPower == 0) {
-                        abd_speedLimit = MAXIMUM_SPEED;
-                        abdR_speedLimit = MAXIMUM_SPEED;
-                    }
-                    else {
-                        abd_speedLimit = MAXIMUM_SPEED_POWER;
-                        abdR_speedLimit = MAXIMUM_SPEED_POWER;
-                    }                                            
-                }
-                if (token != NULL) {
-                    Ed = strtod(token, &unconverted);
-                }
                 gyroHeading = Heading;
                 if (trackWidth > 0.0 && distancePerCount > 0.0)
                     robotInitialized = 1;
@@ -404,9 +378,6 @@ int main() {
 
     // Start the Odometry broadcast cog
     cogstart(&broadcastOdometry, NULL, fstack, sizeof fstack);
-
-    // Start the encoder cog
-    cogstart(&encoderCount, NULL, encoderCountStack, sizeof encoderCountStack);
 
     // To hold received commands
     double CommandedVelocity = 0.0;
@@ -490,21 +461,6 @@ int main() {
                     pluggedIn = (int)(strtod(token, &unconverted));
                     token = strtok(NULL, delimiter);
                 }
-                if (token != NULL) {
-                    controlByPower = (int)(strtod(token, &unconverted));
-                    token = strtok(NULL, delimiter);
-                    if (controlByPower == 0) {
-                        abd_speedLimit = MAXIMUM_SPEED;
-                        abdR_speedLimit = MAXIMUM_SPEED;
-                    }
-                    else {
-                        abd_speedLimit = MAXIMUM_SPEED_POWER;
-                        abdR_speedLimit = MAXIMUM_SPEED_POWER;
-                    }  
-                }
-                if (token != NULL) {
-                    Ed = strtod(token, &unconverted);
-                }
                 timeoutCounter = 0;
             } else if (buf[0] == 'l') {
                 char *token;
@@ -548,24 +504,6 @@ int main() {
                     abdR_speedLimit = strtod(token, &unconverted);
                 }
                 timeoutCounter = 0;
-            } else if (buf[0] == 'r') {
-                //Update the speedLimit and acceleration
-                char *token;
-                token = strtok(buf, delimiter);
-                token = strtok(NULL, delimiter);
-                char *unconverted;
-                int rst_cmd = 0;
-                if (token != NULL) {
-                    rst_cmd = strtod(token, &unconverted);
-                    token = strtok(NULL, delimiter);
-                }
-                if (rst_cmd == 1) {
-                    low(RST);                                  // Reset
-                    pause(100); 
-                    high(RST);
-                    rst_cmd = 0;
-                }
-                timeoutCounter = 0;
             }
         }
 
@@ -599,19 +537,11 @@ int main() {
             timeoutCounter = ROStimeout; // Prevent runaway integer length
         }
         
-         expectedLeftSpeed = newCommandedVelocity - angularVelocityOffset;
-         expectedRightSpeed = newCommandedVelocity + angularVelocityOffset;          
+        expectedLeftSpeed = newCommandedVelocity - angularVelocityOffset;
+        expectedRightSpeed = newCommandedVelocity + angularVelocityOffset;          
   
-            if (controlByPower == 1) {              
-                expectedLeftSpeed = currentLeftSpeed + Kp * (expectedLeftSpeed - currentLeftSpeed); // + Ki * (expectedLeftSpeed - currentLeftSpeed) / timestep;
-                expectedRightSpeed = currentRightSpeed + Kp * (expectedRightSpeed - currentRightSpeed); // + Ki * (expectedRightSpeed - currentRightSpeed) / timestep;
-                expectedLeftSpeed = expectedLeftSpeed / distancePerCount * SPEEDTOPOWER;
-                expectedRightSpeed = expectedRightSpeed / distancePerCount * Ed * SPEEDTOPOWER;
-            }
-            else {
-                expectedLeftSpeed = expectedLeftSpeed / distancePerCount;
-                expectedRightSpeed = expectedRightSpeed / distancePerCount;
-            }            
+        expectedLeftSpeed = expectedLeftSpeed / distancePerCount;
+        expectedRightSpeed = expectedRightSpeed / distancePerCount;          
             
          if (ignoreProximity == 0) {
             if (CommandedVelocity > 0 && pingArray[0] < ping_stop_thres) {
@@ -665,8 +595,6 @@ void broadcastOdometry(void *par) {
     dhb10_com("GO 0 0\r");
     pause(dhb10OverloadPause);
     dhb10_com("RST\r");
-    encoder_ticks[0] = 0;
-    encoder_ticks[1] = 0;
     pause(dhb10OverloadPause);
 //    int acc = DHB10_ACC;
 //    int acc = DHB10_MAX_ACC;
@@ -678,8 +606,6 @@ void broadcastOdometry(void *par) {
     int ticksLeft = 0, ticksRight = 0, ticksLeftOld, ticksRightOld;
     double deltaDistance, deltaTheta, deltaX, deltaY, V, Omega;
     int speedLeft, speedRight, throttleStatus = 0, deltaTicksLeft, deltaTicksRight;
-    double leftMotorPower;
-    double rightMotorPower;
     int newLeftSpeed = 0, newRightSpeed = 0, oldLeftSpeed = 0, oldRightSpeed = 0;
 
     int dt = CLKFREQ / 10;
@@ -708,28 +634,7 @@ void broadcastOdometry(void *par) {
         if (newLeftSpeed != oldLeftSpeed || newRightSpeed != oldRightSpeed) {
 //            dprint(term, "d\tGOSPD\t%d\t%d\t%d\t%d\n", oldLeftSpeed, newLeftSpeed, oldRightSpeed, newRightSpeed);  // For Debugging
 
-            if (controlByPower == 1) {  
-              if ((newLeftSpeed > 0) && (newLeftSpeed < minPowerValue))
-              {
-                  newLeftSpeed = minPowerValue;
-              }              
-              else if ((newLeftSpeed < 0) && (newLeftSpeed > -minPowerValue))
-              {
-                  newLeftSpeed = -minPowerValue;
-              }      
-              if ((newRightSpeed > 0) && (newRightSpeed < minPowerValue))
-              {
-                  newRightSpeed = minPowerValue;
-              }              
-              else if ((newRightSpeed < 0) && (newRightSpeed > -minPowerValue))
-              {
-                  newRightSpeed = -minPowerValue;
-              }         
-              sprint(s, "GO %d %d\r", newLeftSpeed, newRightSpeed);
-            }              
-            else {
-              sprint(s, "GOSPD %d %d\r", newLeftSpeed, newRightSpeed);
-            }            
+            sprint(s, "GOSPD %d %d\r", newLeftSpeed, newRightSpeed);         
             dhb10_com(s);
             pause(dhb10OverloadPause);
         }
@@ -764,10 +669,6 @@ void broadcastOdometry(void *par) {
            //Use encoder values from DHB10 motor board
            ticksLeft = dhb10_ticksLeft;
            ticksRight = dhb10_ticksRight;
-        } else {
-           //Use encoder values from Propeller board
-           ticksLeft = encoder_ticks[0];
-           ticksRight = encoder_ticks[1];
         }
         //dprint(term, "d\tDIST\t%d\t%d\n", ticksLeft, ticksRight);  // For Debugging
         pause(dhb10OverloadPause);
@@ -810,9 +711,6 @@ void broadcastOdometry(void *par) {
         deltaDistance = 0.5f * (double) (deltaTicksLeft + deltaTicksRight) * distancePerCount;
         deltaX = deltaDistance * cos(Heading);
         deltaY = deltaDistance * sin(Heading);
-        
-        currentLeftSpeed = deltaTicksLeft * distancePerCount * timestep;
-        currentRightSpeed = deltaTicksRight * distancePerCount * timestep;
 
         deltaTheta = (deltaTicksRight - deltaTicksLeft) * distancePerCount / trackWidth; 
         Heading += deltaTheta; 
@@ -891,87 +789,6 @@ void broadcastOdometry(void *par) {
         dprint(term, "DEBUG: %d %d %d %d %d\n", ignoreProximity, ignoreCliffSensors, ignoreIRSensors, ignoreFloorSensors, pluggedIn);
         #endif
         */
-    }
-}
-
-/**
- * For when the encoders are connected to the Propeller board
- * instead of being connected to the motor board.
- */
-void WheelCount(int a, int b, int i)
-{
-    if (last_A[i] == 0)
-    {
-        if (a == 1)
-        {
-            if (b == 0)
-            {
-                encoder_ticks[i]++;
-            }
-            else
-            {
-                encoder_ticks[i]--;
-            }
-        }
-    }
-    else if (last_A[i] == 1)
-    {
-        if (a == 0)
-        {
-            if (b == 1)
-            {
-                encoder_ticks[i]++;
-            }
-            else
-            {
-                encoder_ticks[i]--;
-            }
-        }
-    }
-    
-    if (last_B[i] == 0)
-    {
-        if (b == 1)
-        {
-            if (a == 1)
-            {
-                encoder_ticks[i]++;
-            }
-            else
-            {
-                encoder_ticks[i]--;
-            }
-        }
-    }
-    else if (last_B[i] == 1)
-    {
-        if (b == 0)
-        {
-            if (a == 0)
-            {
-                encoder_ticks[i]++;
-            }
-            else
-            {
-                encoder_ticks[i]--;
-            }
-        }
-    }
-    
-    last_A[i] = a;
-    last_B[i] = b;
-}  
-void encoderCount(void *par)
-{
-    while(1)
-    {
-        int left_A = input(LEFT_A);
-        int left_B = input(LEFT_B);
-        int right_A = input(RIGHT_A);
-        int right_B = input(RIGHT_B);
-
-        WheelCount(left_A, left_B, 0);
-        WheelCount(right_A, right_B, 1);
     }
 }
 
