@@ -253,4 +253,4 @@ This MUST be enabled for ROS to work though!
 
 #define enableOutput // Do NOT comment this out when running ROS!
 
-#define CONTROLBYPOWER
+#define hasIMU

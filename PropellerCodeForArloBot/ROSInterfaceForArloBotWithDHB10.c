@@ -105,6 +105,16 @@ I highly suggets you work through the instructions there and run the example pro
 */
 #include "arlodrive.h"
 
+#ifdef hasIMU
+#include "lsm9ds1.h"
+float gx = 0, gy = 0, gz = 0;   // x, y, and z axis readings of the gyroscope
+float ax = 0, ay = 0, az = 0;   // x, y, and z axis readings of the accelerometer
+float mx = 0, my = 0, mz = 0;   // x, y, and z axis readings of the magnetometer
+float tmp = 0;          // temperature measurement  
+void pollIMU(void *par); // Use a cog to fill range variables with ping distances
+static int imustack[128]; // If things get weird make this number bigger!
+#endif
+
 // See ~/.arlobot/per_robot_settings_for_propeller_c_code.h to adjust MAXIMUM_SPEED
 static int abd_speedLimit = MAXIMUM_SPEED;
 // Reverse speed limit to allow robot to reverse fast if it is blocked in front and visa versa
@@ -360,6 +370,10 @@ int main() {
         }
         // Start Gyro polling in another cog
         cogstart(&pollGyro, NULL, gyrostack, sizeof gyrostack);
+    #endif
+
+    #ifdef hasIMU
+        cogstart(&pollIMU, NULL, imustack, sizeof imustack);
     #endif
 
     // Start safetyOverride cog: (AFTER the Motors are initialized!)
@@ -750,6 +764,9 @@ void broadcastOdometry(void *par) {
         }
         #endif
         dprint(term, "}\n");
+        #ifdef hasIMU
+            dprint(term, "g\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t", gx,gy,gz,ax,ay,az,mx,my,mz,tmp);
+        #endif
         #endif
         
         /*
@@ -895,6 +912,23 @@ void pollPingSensors(void *par) {
       }        
     }
 }
+
+#ifdef hasIMU
+void pollIMU(void *par) {
+    int imu_unit = imu_init(1, 2, 3, 4);
+    imu_calibrateAG();
+    imu_clearAccelInterrupt();
+    imu_setAccelInterrupt(Y_AXIS, 1.1, 20, 1, 0);
+    while (1)                                    // Repeat indefinitely
+    {
+        imu_readGyroCalculated(&gx, &gy, &gz); 
+        imu_readAccelCalculated(&ax, &ay, &az);  
+        imu_readMagCalculated(&mz, &my, &mz);
+        imu_readTempCalculated(&tmp, CELSIUS);   
+        pause(500); 
+    }
+}  
+#endif
 
 #ifdef hasMCP3208
 int mcp3208_IR_cm(int channel) {

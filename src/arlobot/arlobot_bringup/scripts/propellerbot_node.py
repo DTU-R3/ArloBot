@@ -23,7 +23,7 @@
 
 import rospy
 import tf
-from math import sin, cos
+from math import sin, cos, radians
 import time
 import json
 import subprocess
@@ -31,7 +31,7 @@ import os
 
 from geometry_msgs.msg import Quaternion
 from geometry_msgs.msg import Twist
-from sensor_msgs.msg import LaserScan
+from sensor_msgs.msg import LaserScan, Temperature, Imu, MagneticField
 from nav_msgs.msg import Odometry
 from std_msgs.msg import String
 from std_msgs.msg import Bool
@@ -111,7 +111,10 @@ class PropellerComm(object):
         self._pirPublisher = rospy.Publisher('~pirState', Bool, queue_size=1)  # for publishing PIR status
         self._arlo_status_publisher = rospy.Publisher('arlo_status', arloStatus, queue_size=1)
         self._buttons_publisher = rospy.Publisher('buttons', arloButtons, queue_size=1)
-        self._ping_publisher = rospy.Publisher('ultrasonic_data', String, queue_size=10);	
+        self._ping_publisher = rospy.Publisher('ultrasonic_data', String, queue_size=10);
+        self._imu_publisher = rospy.Publisher('imu', Imu, queue_size=10)
+        self._magnetic_publisher = rospy.Publisher('magneticField', MagneticField, queue_size=10)
+        self._temperature_publisher = rospy.Publisher('temperature', Temperature, queue_size=10)
 
         # IF the Odometry Transform is done with the robot_pose_ekf do not publish it,
         # but we are not using robot_pose_ekf, because it does nothing for us if you don't have a full IMU!
@@ -164,6 +167,50 @@ class PropellerComm(object):
                 return
             if line_parts[0] == 'b':
                 self._broadcast_button_pushes(line_parts[1].strip())
+
+            if line_parts[0] == 'g':
+                self._broadcast_imu_data(line_parts)
+
+    def _broadcast_imu_data(self, line_parts):
+
+        parts_count = len(line_parts)
+        if parts_count < 11:  # Just discard short lines, increment this as lines get longer
+            rospy.logwarn("Short line from Propeller board: " + str(parts_count))
+            return
+
+        try:
+            gx = float(line_parts[1])
+            gy = float(line_parts[2])
+            gz = float(line_parts[3])
+            ax = float(line_parts[4])
+            ay = float(line_parts[5])
+            az = float(line_parts[6])
+            mx = float(line_parts[7])
+            my = float(line_parts[8])
+            mz = float(line_parts[9])
+            tmp = float(line_parts[10])
+        except:
+            rospy.logwarn("Bad Propeller IMU floats")
+            return
+        
+        imu_msg = Imu()
+        imu_msg.angular_velocity.x = radians(gx)
+        imu_msg.angular_velocity.y = radians(gy)
+        imu_msg.angular_velocity.z = radians(gz)
+        imu_msg.linear_acceleration.x = ax*9.8
+        imu_msg.linear_acceleration.y = ay*9.8
+        imu_msg.linear_acceleration.z = az*9.8
+        self._imu_publisher.publish(imu_msg)
+
+        magnet_msg = MagneticField()
+        magnet_msg.magnetic_field.x = mx
+        magnet_msg.magnetic_field.y = my
+        magnet_msg.magnetic_field.z = mz
+        self._magnetic_publisher.publish(magnet_msg)
+
+        tmp_msg = Temperature()
+        tmp_msg.temperature.data = tmp
+        self._temperature_publisher.publish(tmp_msg)
 
     def _broadcast_button_pushes(self, button):
         # Test with:
