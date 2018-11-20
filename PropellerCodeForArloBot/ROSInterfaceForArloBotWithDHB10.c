@@ -105,17 +105,6 @@ I highly suggets you work through the instructions there and run the example pro
 */
 #include "arlodrive.h"
 
-// Define the encoders pins
-#define LEFT_A 3
-#define LEFT_B 2
-#define RIGHT_A 5
-#define RIGHT_B 4
-#define RST 6
-
-#ifndef SPEEDTOPOWER 
-#define SPEEDTOPOWER 0.5
-#endif
-
 // See ~/.arlobot/per_robot_settings_for_propeller_c_code.h to adjust MAXIMUM_SPEED
 static int abd_speedLimit = MAXIMUM_SPEED;
 // Reverse speed limit to allow robot to reverse fast if it is blocked in front and visa versa
