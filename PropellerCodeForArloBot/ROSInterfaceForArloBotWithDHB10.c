@@ -765,7 +765,7 @@ void broadcastOdometry(void *par) {
         #endif
         dprint(term, "}\n");
         #ifdef hasIMU
-            dprint(term, "g\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t", gx,gy,gz,ax,ay,az,mx,my,mz,tmp);
+            dprint(term, "g\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\n", gx,gy,gz,ax,ay,az,mx,my,mz,tmp);
         #endif
         #endif
         
