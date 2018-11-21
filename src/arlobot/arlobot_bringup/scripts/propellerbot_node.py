@@ -209,7 +209,7 @@ class PropellerComm(object):
         self._magnetic_publisher.publish(magnet_msg)
 
         tmp_msg = Temperature()
-        tmp_msg.temperature.data = tmp
+        tmp_msg.temperature = tmp
         self._temperature_publisher.publish(tmp_msg)
 
     def _broadcast_button_pushes(self, button):
