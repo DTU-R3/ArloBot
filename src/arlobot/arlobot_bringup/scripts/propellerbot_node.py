@@ -883,7 +883,7 @@ class PropellerComm(object):
             else:
                 ac_power = 0
             # WARNING! If you change this check the buffer length in the Propeller C code!
-            message = 'd,%f,%f,%d,%d,%d,%d,%d,%f,%f,%f,%d,%f\r' % (self.track_width, self.distance_per_count, ignore_proximity, ignore_cliff_sensors, ignore_ir_sensors, ignore_floor_sensors, ac_power, self.lastX, self.lastY, self.lastHeading)
+            message = 'd,%f,%f,%d,%d,%d,%d,%d,%f,%f,%f\r' % (self.track_width, self.distance_per_count, ignore_proximity, ignore_cliff_sensors, ignore_ir_sensors, ignore_floor_sensors, ac_power, self.lastX, self.lastY, self.lastHeading)
             rospy.logdebug("Sending drive geometry params message: " + message)
             self._write_serial(message)
         else:
@@ -1036,7 +1036,7 @@ class PropellerComm(object):
                 else:
                     ac_power = 0
                 # WARNING! If you change this check the buffer length in the Propeller C code!
-                message = 'd,%f,%f,%d,%d,%d,%d,%d, %d, %f\r' % (self.track_width, self.distance_per_count, ignore_proximity, ignore_cliff_sensors, ignore_ir_sensors, ignore_floor_sensors, ac_power)
+                message = 'd,%f,%f,%d,%d,%d,%d,%d\r' % (self.track_width, self.distance_per_count, ignore_proximity, ignore_cliff_sensors, ignore_ir_sensors, ignore_floor_sensors, ac_power)
                 self._write_serial(message)
                 self.robotParamChanged = False
 
