@@ -78,6 +78,9 @@ class PropellerComm(object):
         self.ignore_ir_sensors = rospy.get_param("~ignoreIRSensors", False)
         self.ignore_floor_sensors = rospy.get_param("~ignoreFloorSensors", False)
         self.robotParamChanged = False
+        self.min_f = 1.0
+        self.min_l = 1.0
+        self.min_r = 1.0
 
         # Get motor relay numbers for use later in _HandleUSBRelayStatus if USB Relay is in use:
         self.relayExists = rospy.get_param("~usbRelayInstalled", False)
@@ -104,6 +107,7 @@ class PropellerComm(object):
 
         # Subscriptions
         rospy.Subscriber("cmd_vel", Twist, self._handle_velocity_command)  # Is this line or the below bad redundancy?
+        rospy.Subscriber('scan', LaserScan, self._handle_laser_scan)
         rospy.Subscriber("arlobot_safety/safetyStatus", arloSafety, self._safety_shutdown)  # Safety Shutdown
 
         # Publishers
@@ -855,9 +859,23 @@ class PropellerComm(object):
         # which are dealt with in ArloBot on the Activity Board itself in the Propeller code.
         v = twist_command.linear.x  # m/s
         omega = twist_command.angular.z  # rad/s
+        if self.min_f < 0.5:
+            v = min(self.min_f - 0.4, 0)
+        if self.min_l < 0.5:
+            v = 0
+            omega = -0.2
+        elif self.min_r < 0.5:
+            v = 0
+            omega = 0.2
+
         rospy.logdebug("Handling twist command: " + str(v) + "," + str(omega))
         message = 's,%.3f,%.3f\r' % (v, omega)
         self._write_serial(message)
+
+    def _handle_laser_scan(self, laser_scan):
+        self.min_f = min(laser_scan.ranges[135:225])
+        self.min_l = min(laser_scan.ranges[181:240])
+        self.min_r = min(laser_scan.ranges[120:180])
 
     def _initialize_drive_geometry(self, line_parts):
         """ Send parameters from YAML file to Propeller board. """
