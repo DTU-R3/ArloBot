@@ -859,14 +859,15 @@ class PropellerComm(object):
         # which are dealt with in ArloBot on the Activity Board itself in the Propeller code.
         v = twist_command.linear.x  # m/s
         omega = twist_command.angular.z  # rad/s
-        if self.min_f < 0.5:
-            v = min(self.min_f - 0.4, 0)
-        if self.min_l < 0.5:
-            v = 0
-            omega = -0.2
-        elif self.min_r < 0.5:
-            v = 0
-            omega = 0.2
+        if v > 0:
+            if self.min_f < 0.5:
+                v = min(self.min_f - 0.4, 0)
+            if self.min_l < 0.5:
+                v = 0
+                omega = -0.5
+            elif self.min_r < 0.5:
+                v = 0
+                omega = 0.5
 
         rospy.logdebug("Handling twist command: " + str(v) + "," + str(omega))
         message = 's,%.3f,%.3f\r' % (v, omega)
