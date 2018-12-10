@@ -25,6 +25,9 @@
 
   <!-- rplidar -->
   <include file="$(find rplidar_ros)/launch/rplidar.launch" />
+
+  <!-- demo -->
+  <include file="$(find waypoint_nav)/launch/demo.launch" />
     
 </launch>
 
