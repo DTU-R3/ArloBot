@@ -860,12 +860,10 @@ class PropellerComm(object):
         v = twist_command.linear.x  # m/s
         omega = twist_command.angular.z  # rad/s
         if v > 0:
-            if self.min_f < 0.5:
-                v = min(self.min_f - 0.4, 0)
-            if self.min_l < 0.5:
+            if self.min_l < 0.4:
                 v = 0
                 omega = -0.5
-            elif self.min_r < 0.5:
+            elif self.min_r < 0.4:
                 v = 0
                 omega = 0.5
 
@@ -874,7 +872,6 @@ class PropellerComm(object):
         self._write_serial(message)
 
     def _handle_laser_scan(self, laser_scan):
-        self.min_f = min(laser_scan.ranges[135:225])
         self.min_l = min(laser_scan.ranges[181:240])
         self.min_r = min(laser_scan.ranges[120:180])
 
