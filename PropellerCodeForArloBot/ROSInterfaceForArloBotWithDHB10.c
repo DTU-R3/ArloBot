@@ -947,7 +947,7 @@ void pollIMU(void *par) {
 void pollWater(void *par) {
     while (1)                                    // Repeat indefinitely
     {
-        int water = input(13);   
+        water = input(13);   
         pause(500); 
     }
 }  
