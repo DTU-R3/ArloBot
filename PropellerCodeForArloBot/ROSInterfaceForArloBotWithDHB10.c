@@ -115,6 +115,12 @@ void pollIMU(void *par); // Use a cog to fill range variables with ping distance
 static int imustack[128]; // If things get weird make this number bigger!
 #endif
 
+#ifdef waterDetection
+int water = 0;
+void pollWater(void *par);
+static int waterstack[128];
+#endif
+
 // See ~/.arlobot/per_robot_settings_for_propeller_c_code.h to adjust MAXIMUM_SPEED
 static int abd_speedLimit = MAXIMUM_SPEED;
 // Reverse speed limit to allow robot to reverse fast if it is blocked in front and visa versa
@@ -374,6 +380,10 @@ int main() {
 
     #ifdef hasIMU
         cogstart(&pollIMU, NULL, imustack, sizeof imustack);
+    #endif
+    
+    #ifdef waterDetection
+        cogstart(&pollWater, NULL, waterstack, sizeof waterstack);
     #endif
 
     // Start safetyOverride cog: (AFTER the Motors are initialized!)
@@ -767,6 +777,9 @@ void broadcastOdometry(void *par) {
         #ifdef hasIMU
             dprint(term, "g\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\n", gx,gy,gz,ax,ay,az,mx,my,mz,tmp);
         #endif
+        #ifdef waterDetection
+            dprint(term, "w\t%d\n", water);
+        #endif
         #endif
         
         /*
@@ -925,6 +938,16 @@ void pollIMU(void *par) {
         imu_readAccelCalculated(&ax, &ay, &az);  
         imu_readMagCalculated(&mz, &my, &mz);
         imu_readTempCalculated(&tmp, CELSIUS);   
+        pause(500); 
+    }
+}  
+#endif
+
+#ifdef waterDetection
+void pollWater(void *par) {
+    while (1)                                    // Repeat indefinitely
+    {
+        int water = input(13);   
         pause(500); 
     }
 }  
