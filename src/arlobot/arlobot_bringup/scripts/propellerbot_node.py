@@ -113,13 +113,13 @@ class PropellerComm(object):
         # Publishers
         self._SerialPublisher = rospy.Publisher('serial', String, queue_size=10)
         self._pirPublisher = rospy.Publisher('~pirState', Bool, queue_size=1)  # for publishing PIR status
-        self._arlo_status_publisher = rospy.Publisher('arlo_status', arloStatus, queue_size=1)
-        self._buttons_publisher = rospy.Publisher('buttons', arloButtons, queue_size=1)
-        self._ping_publisher = rospy.Publisher('ultrasonic_data', String, queue_size=10);
-        self._imu_publisher = rospy.Publisher('imu', Imu, queue_size=10)
-        self._magnetic_publisher = rospy.Publisher('magneticField', MagneticField, queue_size=10)
-        self._temperature_publisher = rospy.Publisher('temperature', Temperature, queue_size=10)
-        self._water_publisher = rospy.Publisher('water', Bool, queue_size=10)
+        self._arlo_status_publisher = rospy.Publisher('~arlo_status', arloStatus, queue_size=1)
+        self._buttons_publisher = rospy.Publisher('~buttons', arloButtons, queue_size=1)
+        self._ping_publisher = rospy.Publisher('~ultrasonic_data', String, queue_size=10);
+        self._imu_publisher = rospy.Publisher('~imu', Imu, queue_size=10)
+        self._magnetic_publisher = rospy.Publisher('~magneticField', MagneticField, queue_size=10)
+        self._temperature_publisher = rospy.Publisher('~temperature', Temperature, queue_size=10)
+        self._water_publisher = rospy.Publisher('~water', Bool, queue_size=10)
 
         # IF the Odometry Transform is done with the robot_pose_ekf do not publish it,
         # but we are not using robot_pose_ekf, because it does nothing for us if you don't have a full IMU!
