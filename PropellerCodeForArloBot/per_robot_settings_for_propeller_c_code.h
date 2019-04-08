@@ -253,4 +253,5 @@ This MUST be enabled for ROS to work though!
 
 #define enableOutput // Do NOT comment this out when running ROS!
 
-#define hasIMU
+// #define hasIMU
+#define waterDetection
