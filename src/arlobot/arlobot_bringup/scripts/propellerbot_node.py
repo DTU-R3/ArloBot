@@ -119,6 +119,7 @@ class PropellerComm(object):
         self._imu_publisher = rospy.Publisher('imu', Imu, queue_size=10)
         self._magnetic_publisher = rospy.Publisher('magneticField', MagneticField, queue_size=10)
         self._temperature_publisher = rospy.Publisher('temperature', Temperature, queue_size=10)
+        self._water_publisher = rospy.Publisher('water', Bool, queue_size=10)
 
         # IF the Odometry Transform is done with the robot_pose_ekf do not publish it,
         # but we are not using robot_pose_ekf, because it does nothing for us if you don't have a full IMU!
@@ -174,6 +175,29 @@ class PropellerComm(object):
 
             if line_parts[0] == 'g':
                 self._broadcast_imu_data(line_parts)
+
+            if line_parts[0] == 'w':
+                self._broadcast_water_data(line_parts)
+
+    def _broadcast_water_data(self, line_parts):
+
+        parts_count = len(line_parts)
+        if parts_count < 2:  # Just discard short lines, increment this as lines get longer
+            rospy.logwarn("Short line from Propeller board: " + str(parts_count))
+            return
+
+        try:
+            water = int(line_parts[1])
+        except:
+            rospy.logwarn("Bad Propeller water int")
+            return
+        
+        water_msg = Bool()
+        if water == 1:
+            water_msg.data = True
+        else:
+            water_msg.data = False
+        self._water_publisher.publish(water_msg)
 
     def _broadcast_imu_data(self, line_parts):
 
